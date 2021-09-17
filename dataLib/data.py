@@ -8,12 +8,16 @@
 import os 
 from glob import glob
 from tqdm.auto import tqdm
-from .utils import LOG_INFO 
+from .utils import LOG_INFO,padToFixedHeightWidth 
 import PIL
-import PIL.ImageFont
+import PIL.ImageFont,PIL.Image,PIL.ImageDraw
 import random
 import json 
 import calendar
+import cv2 
+import numpy as np 
+import matplotlib.pyplot as plt
+import math
 #--------------------
 # source
 #--------------------
@@ -42,9 +46,6 @@ class Data(object):
                 class front:
                     nid   = [img_path for img_path in  tqdm(glob(os.path.join(self.src_dir,"styles","front","nid","*.*")))]
                     smart = [img_path for img_path in  tqdm(glob(os.path.join(self.src_dir,"styles","front","smart","*.*")))]
-            class fonts:
-                bangla    = [font_path for font_path in  tqdm(glob(os.path.join(self.src_dir,"fonts","bangla","*.*")))]
-                english   = [font_path for font_path in  tqdm(glob(os.path.join(self.src_dir,"fonts","english","*.*")))]
             class noise:
                 signs     = [img_path for img_path in tqdm(glob(os.path.join(self.src_dir,"noise","signature","*.*")))]
                 faces     = [img_path for img_path in tqdm(glob(os.path.join(self.src_dir,"noise","faces","*.*")))]
@@ -65,12 +66,12 @@ class Data(object):
                     data        =   [319, 148, 778, 591]
                     chip        =   [781, 302, 914, 399] 
                     text        ={
-                                    "bn_name"     :   {"location":[319, 192, 778, 237],"font_size":42,"lang":"bn"},
-                                    "en_name"     :   {"location":[319, 267, 778, 311],"font_size":42,"lang":"en"},
-                                    "f_name"      :   {"location":[319, 337, 778, 386],"font_size":42,"lang":"bn"},
-                                    "m_name"      :   {"location":[319, 413, 778, 466],"font_size":42,"lang":"bn"},
-                                    "dob"         :   {"location":[456, 466, 778, 525],"font_size":42,"lang":"en"},
-                                    "nid"         :   {"location":[456, 529, 778, 579],"font_size":48,"lang":"en"}
+                                    "bn_name"     :   {"location":[327, 180, 777, 270],"font_size":48,"lang":"bn","font":"bold"},
+                                    "en_name"     :   {"location":[327, 270, 777, 337],"font_size":32,"lang":"en","font":"bold"},
+                                    "f_name"      :   {"location":[327, 337, 777, 413],"font_size":48,"lang":"bn","font":"reg"},
+                                    "m_name"      :   {"location":[327, 413, 777, 495],"font_size":48,"lang":"bn","font":"reg"},
+                                    "dob"         :   {"location":[480, 495, 777, 550],"font_size":38,"lang":"en","font":"reg"},
+                                    "nid"         :   {"location":[480, 550, 777, 590],"font_size":42,"lang":"en","font":"bold"}
                                 }
                 class back:
                     template    =   os.path.join(self.res_dir,"smart_template_back.png")
@@ -83,12 +84,12 @@ class Data(object):
                     sign        =   [26, 461, 252, 574]
                     data        =   [259, 198, 1011, 600]
                     text        =   {
-                                        "bn_name"     :   {"location":[388, 206, 1011, 266],"font_size":48,"lang":"bn"},
-                                        "en_name"     :   {"location":[388, 272, 1011, 326],"font_size":48,"lang":"en"},
-                                        "f_name"      :   {"location":[388, 331, 1011, 396],"font_size":48,"lang":"bn"},
-                                        "m_name"      :   {"location":[388, 399, 1011, 456],"font_size":48,"lang":"bn"},
-                                        "dob"         :   {"location":[531, 461, 1011, 512],"font_size":48,"lang":"en"},
-                                        "nid"         :   {"location":[451, 528, 1011, 600],"font_size":64,"lang":"en"}
+                                        "bn_name"     :   {"location":[410, 200, 1011, 280],"font_size":56,"lang":"bn","font":"bold"},
+                                        "en_name"     :   {"location":[410, 280, 1011, 331],"font_size":36,"lang":"en","font":"bold"},
+                                        "f_name"      :   {"location":[410, 331, 1011, 395],"font_size":50,"lang":"bn","font":"reg"},
+                                        "m_name"      :   {"location":[410, 395, 1011, 461],"font_size":50,"lang":"bn","font":"reg"},
+                                        "dob"         :   {"location":[545, 461, 1011, 520],"font_size":42,"lang":"en","font":"reg"},
+                                        "nid"         :   {"location":[455, 520, 1011, 600],"font_size":60,"lang":"en","font":"bold"}
                                     }
                 class back:
                     template    =   os.path.join(self.res_dir,"nid_template_back.png")
@@ -108,13 +109,11 @@ class Data(object):
         self.source =   source
         self.card   =   card 
         self.config =   config    
-        '''
         # extend text
         ## smart card font
         self.initTextFonts(self.card.smart.front.text)
         ## nid card font
         self.initTextFonts(self.card.nid.front.text)
-        '''
         
         #----------------------------
         # dictionary json
@@ -133,10 +132,11 @@ class Data(object):
             different size font initialization
         '''
         if attr["lang"]=="bn":
-            font_path=random.choice(self.source.fonts.bangla)
+            font_path=os.path.join(self.res_dir,f"bangla_{attr['font']}.ttf")
         else:
-            font_path=random.choice(self.source.fonts.english)
-        return PIL.ImageFont.truetype(font_path, size=attr["font_size"])
+            font_path=os.path.join(self.res_dir,f"english_{attr['font']}.ttf")
+        font = PIL.ImageFont.truetype(font_path, size=attr["font_size"])
+        return font
     
     def initTextFonts(self,text):
         '''
@@ -182,7 +182,7 @@ class Data(object):
             name=name[:-1]
         return name
 
-    def __createEnName(self,mod_id):
+    def __createEnName(self,mod_id,type):
         '''
             creates English name
         '''
@@ -204,10 +204,13 @@ class Data(object):
             use_puncts=False
         name_len=random.randint(1,name_len)
         # determine case
-        if random.choice([1,0,0,0])==1:
+        if type=="smart":
             use_full_upper_case=True
         else:
-            use_full_upper_case=False
+            if random.choice([1,0,0,0])==1:
+                use_full_upper_case=True
+            else:
+                use_full_upper_case=False
 
         # string construction
         for curr_len in range(name_len):
@@ -248,10 +251,67 @@ class Data(object):
         else:
             return self.__getNumber(random.randint(10,15))
 
-    def createCardData(self,type):
+    def __createTextCardFront(self,type):
         return {"bn_name":self.__createBnName(mod_id=None),
-                "en_name":self.__createEnName(mod_id=None),
+                "en_name":self.__createEnName(mod_id=None,type=type),
                 "f_name" :self.__createBnName(mod_id=0),
                 "m_name" :self.__createBnName(mod_id=1),
                 "dob"    :self.__createDOB(),
                 "nid"    :self.__createNID(type)}
+
+   
+    
+    def createCardFront(self,type,depth_color=50):
+        '''
+            creates an image of card front side data
+        '''
+        if type=="smart":
+            card_front=self.card.smart.front
+            info_color=(depth_color,depth_color,depth_color)
+        else:
+            card_front=self.card.nid.front
+            info_color=(0,0,255)
+        template =cv2.imread(card_front.template)
+        # fill signs and images
+        sign=cv2.imread(random.choice(self.source.noise.signs),0)
+        face=cv2.imread(random.choice(self.source.noise.faces))
+        # place face
+        x1,y1,x2,y2=card_front.face
+        h=y2-y1
+        w=x2-x1
+        template[y1:y2,x1:x2]=cv2.resize(face,(w,h))
+        # place sign
+        x1,y1,x2,y2=card_front.sign
+        h=y2-y1
+        w=x2-x1
+        mask=np.ones(template.shape[:-1])*255
+        mask[y1:y2,x1:x2]=cv2.resize(sign,(w,h),fx=0,fy=0,interpolation=cv2.INTER_NEAREST)
+        mask[mask!=0]=255
+        template[mask==0]=(0,0,0)
+        # text data
+        info_keys=["nid","dob"]
+        
+        text=self.__createTextCardFront(type)
+        h_t,w_t,d=template.shape
+        for k,v in text.items():
+            # res
+            font=card_front.text[k]["font"]
+            mask=np.zeros((h_t,w_t))
+            # height width
+            x1,y1,x2,y2=card_front.text[k]["location"]
+            width_loc=x2-x1
+            height_loc=y2-y1
+            (width,height), (offset_x, offset_y) = font.font.getsize(v)
+            # data
+            image   =   PIL.Image.new(mode='L', size=(width+offset_x,height+offset_y))
+            draw    =   PIL.ImageDraw.Draw(image)
+            draw.text(xy=(0,0),text=v, fill=1, font=font)
+            image   =   np.array(image)
+            image=padToFixedHeightWidth(image,height_loc,width_loc)
+            mask[y1:y2,x1:x2]=image
+            if k in info_keys:
+                template[mask>0]=info_color
+            else:
+                template[mask>0]=(depth_color,depth_color,depth_color)
+            
+        return template,text

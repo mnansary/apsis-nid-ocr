@@ -33,3 +33,31 @@ def create_dir(base,ext):
         os.mkdir(_path)
     return _path
 #---------------------------------------------------------------
+def padToFixedHeightWidth(img,h_max,w_max):
+    '''
+        pads an image to fixed height and width
+    '''
+    # shape
+    h,w=img.shape
+    if w<w_max:
+        # pad widths
+        pad_width =(w_max-w)        
+        pad =np.zeros((h,pad_width))
+        # pad
+        img =np.concatenate([img,pad],axis=1)
+    elif w>w_max: # reduce height
+        h_new=int(w_max*h/w)
+        img = cv2.resize(img, (w_max,h_new), fx=0,fy=0, interpolation = cv2.INTER_NEAREST)
+    # shape
+    h,w=img.shape
+    if h<h_max:    
+        # pad heights
+        pad_height =h_max-h        
+        pad =np.zeros((pad_height,w))
+        # pad
+        img =np.concatenate([img,pad],axis=0)
+    elif h>h_max:
+        w_new=int(h_max*w/h)
+        img = cv2.resize(img, (w_new,h_max), fx=0,fy=0, interpolation = cv2.INTER_NEAREST)
+    img = cv2.resize(img, (w_max,h_max), fx=0,fy=0, interpolation = cv2.INTER_NEAREST)
+    return img

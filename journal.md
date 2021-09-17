@@ -10,4 +10,7 @@
 # dataLib
 - [x] data.py
 - [x] fix-vocab
-- [x] name data
+- [x] text data
+- [x] image data
+- [ ] segmentation data
+- [ ] recognition data
