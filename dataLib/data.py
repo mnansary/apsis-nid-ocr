@@ -95,6 +95,11 @@ class Data(object):
                     template    =   os.path.join(self.res_dir,"nid_template_back.png")
 
         class config:
+            max_rotation  = 15
+            max_warp_perc = 10 
+            max_pad_perc  = 50
+            noise_weights = [0.7,0.3]
+            blur_weights  = [0.5,0.5]
             class bangla_name:
                 max_len = 15
                 puncts  = [',','.','-','(',')']
@@ -315,3 +320,45 @@ class Data(object):
                 template[mask>0]=(depth_color,depth_color,depth_color)
             
         return template,text
+    
+    def backgroundGenerator(self,dim=(1024,1024)):
+        '''
+        generates random background
+        args:
+            ds   : dataset object
+            dim  : the dimension for background
+        '''
+        # collect image paths
+        _paths=self.source.noise.backs
+        while True:
+            _type=random.choice(["single","double","comb"])
+            if _type=="single":
+                img=cv2.imread(random.choice(_paths))
+                yield img
+            elif _type=="double":
+                imgs=[]
+                img_paths= random.sample(_paths, 2)
+                for img_path in img_paths:
+                    img=cv2.imread(img_path)
+                    h,w,d=img.shape
+                    img=cv2.resize(img,dim)
+                    imgs.append(img)
+                # randomly concat
+                img=np.concatenate(imgs,axis=random.choice([0,1]))
+                img=cv2.resize(img,(w,h))
+                yield img
+            else:
+                imgs=[]
+                img_paths= random.sample(_paths, 4)
+                for img_path in img_paths:
+                    img=cv2.imread(img_path)
+                    h,w,d=img.shape
+                    img=cv2.resize(img,dim)
+                    imgs.append(img)
+                seg1=imgs[:2]
+                seg2=imgs[2:]
+                seg1=np.concatenate(seg1,axis=0)
+                seg2=np.concatenate(seg2,axis=0)
+                img=np.concatenate([seg1,seg2],axis=1)
+                img=cv2.resize(img,(w,h))
+                yield img

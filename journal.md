@@ -13,4 +13,10 @@
 - [x] text data
 - [x] image data
 - [ ] segmentation data
+  - [x] background
+  - [x] rotation
+  - [x] perspective transformation
+  - [x] placement
+  - [x] data points
+  - [ ] server_gen
 - [ ] recognition data
