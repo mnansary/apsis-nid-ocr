@@ -49,6 +49,43 @@ def stripPads(arr,
     arr=arr[:, ~np.all(arr == val, axis=0)]
     return arr
 #---------------------------------------------------------------
+def remove_shadows(img):
+    '''
+    removes shadows and thresholds
+    '''
+    assert len(img.shape)==3
+    img= cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+    result_norm_planes = []
+    # split rgb
+    rgb_planes = cv2.split(img)
+    # clean planes
+    for plane in rgb_planes:
+        # dilate
+        dilated_img = cv2.dilate(plane, np.ones((7,7), np.uint8))
+        # background
+        bg_img = cv2.medianBlur(dilated_img, 21)
+        # difference
+        diff_img = 255 - cv2.absdiff(plane, bg_img)
+        # normalized
+        norm_img = cv2.normalize(diff_img,None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+        # append
+        result_norm_planes.append(norm_img)
+    # merge rgb
+    img = cv2.merge(result_norm_planes)
+    return img
+#---------------------------------------------------------------
+def threshold_image(img):
+    '''
+        threshold an image
+    '''
+    assert len(img.shape)==3
+    # grayscale
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # threshold
+    _,img = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    return img
+
+#---------------------------------------------------------------
 def padToFixedHeightWidth(img,h_max,w_max):
     '''
         pads an image to fixed height and width

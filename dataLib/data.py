@@ -66,10 +66,10 @@ class Data(object):
                     data        =   [319, 148, 778, 591]
                     chip        =   [781, 302, 914, 399] 
                     text        ={
-                                    "bn_name"     :   {"location":[327, 180, 777, 270],"font_size":48,"lang":"bn","font":"bold"},
-                                    "en_name"     :   {"location":[327, 270, 777, 337],"font_size":32,"lang":"en","font":"bold"},
-                                    "f_name"      :   {"location":[327, 337, 777, 413],"font_size":48,"lang":"bn","font":"reg"},
-                                    "m_name"      :   {"location":[327, 413, 777, 495],"font_size":48,"lang":"bn","font":"reg"},
+                                    "bn_name"     :   {"location":[327, 187, 777, 245],"font_size":48,"lang":"bn","font":"bold"},
+                                    "en_name"     :   {"location":[327, 270, 777, 318],"font_size":32,"lang":"en","font":"bold"},
+                                    "f_name"      :   {"location":[327, 342, 777, 403],"font_size":48,"lang":"bn","font":"reg"},
+                                    "m_name"      :   {"location":[327, 417, 777, 485],"font_size":48,"lang":"bn","font":"reg"},
                                     "dob"         :   {"location":[480, 495, 777, 550],"font_size":38,"lang":"en","font":"reg"},
                                     "nid"         :   {"location":[480, 550, 777, 590],"font_size":42,"lang":"en","font":"bold"}
                                 }
