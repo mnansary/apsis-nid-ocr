@@ -33,6 +33,22 @@ def create_dir(base,ext):
         os.mkdir(_path)
     return _path
 #---------------------------------------------------------------
+def stripPads(arr,
+              val):
+    '''
+        strip specific value
+        args:
+            arr :   the numpy array (2d)
+            val :   the value to strip
+        returns:
+            the clean array
+    '''
+    # x-axis
+    arr=arr[~np.all(arr == val, axis=1)]
+    # y-axis
+    arr=arr[:, ~np.all(arr == val, axis=0)]
+    return arr
+#---------------------------------------------------------------
 def padToFixedHeightWidth(img,h_max,w_max):
     '''
         pads an image to fixed height and width

@@ -1,4 +1,22 @@
+**Quick copy** 
+
+```python
+apsisdev@202.53.174.4
+```
+
+
+
+```html
+# <span style="color:lime">```MainDivision```</span>
+### <span style="color:indigo">```SubDivision```</span>
+<span style="color:darkorange">**UmbrellaTask**</span> 
+<span style="color:red">**Subtask**</span>
+```
+
+# 
+
 # Fixed Resources:
+
 - [x] Fonts
     - [x] Bangla
     - [x] English
@@ -12,11 +30,19 @@
 - [x] fix-vocab
 - [x] text data
 - [x] image data
-- [ ] segmentation data
+- [x] segmentation data
   - [x] background
   - [x] rotation
   - [x] perspective transformation
   - [x] placement
   - [x] data points
-  - [ ] server_gen
+  - [x] server_gen
+  - [ ] tfrecords
+  - [ ] modeling
+  - [ ] loss
+  - [ ] train
+  - [ ] inference
 - [ ] recognition data
+  - [ ] location based scene text
+  - [ ] encoded and padded labels
+  - [ ] data gen
