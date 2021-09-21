@@ -24,16 +24,20 @@ tqdm.pandas()
 with open("../vocab.json") as f:
     vocab = json.load(f)["vocab"]
 
+start_end_value=len(vocab)
+pad_value =start_end_value+1
+LOG_INFO(f"start-end:{start_end_value}")
+LOG_INFO(f"pad:{pad_value}")
+
 #--------------------------------
 # main
 #--------------------------------
 
 
-def pad_label(x,max_len,pad_value):
+def pad_label(x,max_len):
     '''
         lambda function to create padded label for robust scanner
     '''
-    start_end_value=pad_value+1
     x=[start_end_value]+x+[start_end_value]
     pad=[pad_value for _ in range(max_len-len(x))]
     return x+pad
@@ -68,7 +72,7 @@ def main(args):
     LOG_INFO(f"Max Label Lenght after correction:{max(df['label_length'].tolist())}")
     
     # label formation
-    df["label"]=df.encoded.progress_apply(lambda x:pad_label(x,max_len,len(vocab)))
+    df["label"]=df.encoded.progress_apply(lambda x:pad_label(x,max_len))
 
     masks=[]
     #--- resize and pad images and create masks
