@@ -4,6 +4,12 @@
 apsisdev@202.53.174.4
 ```
 
+**meet**
+
+```python
+https://meet.google.com/zch-mvtx-hvq
+```
+
 
 
 ```html
@@ -13,7 +19,7 @@ apsisdev@202.53.174.4
 <span style="color:red">**Subtask**</span>
 ```
 
-# 
+
 
 # Fixed Resources:
 
@@ -45,11 +51,15 @@ apsisdev@202.53.174.4
   - [x] modeling
   - [x] loss
   - [x] train
-  - [ ] inference
+  - [x] inference
 - [ ] recognition data
   - [x] location based scene text
-  - [ ] encoded and padded labels
-  - [ ] data gen
+  - [x] encoded and padded labels
+  - [x] data gen
+  - [ ] tfrecords
+  - [ ] train
+  - [ ] infer
+- [ ] segmentation/data crop: version:2 modeling
 
 
 # smart card creation Location: 
