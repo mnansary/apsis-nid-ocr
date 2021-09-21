@@ -56,6 +56,7 @@ def main(args):
     img_dir =os.path.join(recog_dir,"images")
     data_csv =os.path.join(recog_dir,"data.csv")
     df=pd.read_csv(data_csv)
+    df.dropna(inplace=True)
     #--- df processing-----------
     df["img_path"]=df["filename"].progress_apply(lambda x:os.path.join(img_dir,x))
     # unicodes
