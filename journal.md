@@ -32,33 +32,20 @@ https://meet.google.com/zch-mvtx-hvq
 - [x] National ID Card Template
 
 # dataLib
-- [x] data.py
+- [ ] data.py
+  - [ ] name construction: coma,hyphen,brackets
+  - [ ] recheck generation
 - [x] fix-vocab
 - [x] text data
 - [x] image data
 - [x] segmentation data
-  - [x] background
-  - [x] rotation
-  - [x] perspective transformation
-  - [x] placement
-  - [x] data points
-  - [x] server_gen
-  - [x] tfrecords
-    - [x] image
-    - [x] mask
-    - [x] class
-    - [x] bbox
-  - [x] modeling
-  - [x] loss
-  - [x] train
-  - [x] inference
 - [x] recognition data
-  - [x] location based scene text
-  - [x] encoded and padded labels
-  - [x] data gen
-  - [x] tfrecords
-  - [x] train
-  - [x] infer
+  - [ ] location based scene text
+  - [ ] encoded and padded labels
+  - [ ] data gen
+  - [ ] tfrecords
+  - [ ] train
+  - [ ] infer
 - [ ] segmentation/data crop: version:2 modeling
 
 

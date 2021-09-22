@@ -101,12 +101,12 @@ class Data(object):
             noise_weights = [0.7,0.3]
             blur_weights  = [0.5,0.5]
             class bangla_name:
-                max_len = 15
+                max_len = 20
                 puncts  = [',','.','-','(',')']
                 mods    = ["মোঃ ","মোছাঃ "]
                 sub_len = 3
             class english_name:
-                max_len = 15
+                max_len = 20
                 puncts  = [',','.','-','(',')']
                 mods    = ["MD. ","MRS. "]
                 sub_len = 3
@@ -242,15 +242,19 @@ class Data(object):
         for _ in range(len):
             num+=random.choice(self.english["numbers"])
         return num 
-    def __createDOB(self):
+    def __createDOB(self,type):
         '''
             creates a date of birth
         '''
         months=list(calendar.month_abbr)[1:]
-        return self.__getNumber(2)+' '+random.choice(months)+' '+self.__getNumber(4) 
+        start=self.__getNumber(2)
+        if type=="smart":
+            if start[0]=='0':
+                start=start[1:]
+
+        return start+' '+random.choice(months)+' '+self.__getNumber(4) 
 
     def __createNID(self,type):
-        nid=''
         if type=="smart":
             return self.__getNumber(3)+' '+self.__getNumber(3)+' '+self.__getNumber(4)
         else:
@@ -261,7 +265,7 @@ class Data(object):
                 "en_name":self.__createEnName(mod_id=None,type=type),
                 "f_name" :self.__createBnName(mod_id=0),
                 "m_name" :self.__createBnName(mod_id=1),
-                "dob"    :self.__createDOB(),
+                "dob"    :self.__createDOB(type),
                 "nid"    :self.__createNID(type)}
 
    
