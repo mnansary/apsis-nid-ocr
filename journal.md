@@ -52,13 +52,13 @@ https://meet.google.com/zch-mvtx-hvq
   - [x] loss
   - [x] train
   - [x] inference
-- [ ] recognition data
+- [x] recognition data
   - [x] location based scene text
   - [x] encoded and padded labels
   - [x] data gen
-  - [ ] tfrecords
-  - [ ] train
-  - [ ] infer
+  - [x] tfrecords
+  - [x] train
+  - [x] infer
 - [ ] segmentation/data crop: version:2 modeling
 
 
