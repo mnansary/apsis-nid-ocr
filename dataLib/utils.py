@@ -105,10 +105,13 @@ def padToFixedHeightWidth(img,h_max,w_max):
     h,w=img.shape
     if h<h_max:    
         # pad heights
-        pad_height =h_max-h        
-        pad =np.zeros((pad_height,w))
+        pad_height_top =1+(h_max-h)//2
+        pad_height_bot =1+h_max-h-pad_height_top
+                
+        pad_top =np.zeros((pad_height_top,w))
+        pad_bot =np.zeros((pad_height_bot,w))
         # pad
-        img =np.concatenate([img,pad],axis=0)
+        img =np.concatenate([pad_top,img,pad_bot],axis=0)
     elif h>h_max:
         w_new=int(h_max*w/h)
         img = cv2.resize(img, (w_new,h_max), fx=0,fy=0, interpolation = cv2.INTER_NEAREST)

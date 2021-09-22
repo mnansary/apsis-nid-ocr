@@ -7,6 +7,7 @@
 #--------------------
 import os 
 from glob import glob
+from unicodedata import name
 from tqdm.auto import tqdm
 from .utils import LOG_INFO,padToFixedHeightWidth 
 import PIL
@@ -70,7 +71,7 @@ class Data(object):
                                     "en_name"     :   {"location":[327, 270, 777, 318],"font_size":32,"lang":"en","font":"bold"},
                                     "f_name"      :   {"location":[327, 342, 777, 403],"font_size":48,"lang":"bn","font":"reg"},
                                     "m_name"      :   {"location":[327, 417, 777, 485],"font_size":48,"lang":"bn","font":"reg"},
-                                    "dob"         :   {"location":[480, 495, 777, 550],"font_size":38,"lang":"en","font":"reg"},
+                                    "dob"         :   {"location":[480, 490, 777, 550],"font_size":38,"lang":"en","font":"reg"},
                                     "nid"         :   {"location":[480, 550, 777, 590],"font_size":42,"lang":"en","font":"bold"}
                                 }
                 class back:
@@ -84,12 +85,12 @@ class Data(object):
                     sign        =   [26, 461, 252, 574]
                     data        =   [259, 198, 1011, 600]
                     text        =   {
-                                        "bn_name"     :   {"location":[410, 200, 1011, 280],"font_size":56,"lang":"bn","font":"bold"},
-                                        "en_name"     :   {"location":[410, 280, 1011, 331],"font_size":36,"lang":"en","font":"bold"},
-                                        "f_name"      :   {"location":[410, 331, 1011, 395],"font_size":50,"lang":"bn","font":"reg"},
-                                        "m_name"      :   {"location":[410, 395, 1011, 461],"font_size":50,"lang":"bn","font":"reg"},
-                                        "dob"         :   {"location":[545, 461, 1011, 520],"font_size":42,"lang":"en","font":"reg"},
-                                        "nid"         :   {"location":[455, 520, 1011, 600],"font_size":60,"lang":"en","font":"bold"}
+                                    "bn_name"     :   {"location":[410, 210, 1011, 280],"font_size":56,"lang":"bn","font":"bold"},
+                                    "en_name"     :   {"location":[410, 282, 1011, 322],"font_size":36,"lang":"en","font":"bold"},
+                                    "f_name"      :   {"location":[410, 338, 1011, 390],"font_size":52,"lang":"bn","font":"reg"},
+                                    "m_name"      :   {"location":[410, 400, 1011, 460],"font_size":52,"lang":"bn","font":"reg"},
+                                    "dob"         :   {"location":[545, 455, 1011, 515],"font_size":42,"lang":"en","font":"reg"},
+                                    "nid"         :   {"location":[455, 515, 1011, 600],"font_size":60,"lang":"en","font":"bold"}
                                     }
                 class back:
                     template    =   os.path.join(self.res_dir,"nid_template_back.png")
@@ -100,20 +101,22 @@ class Data(object):
             max_pad_perc  = 50
             noise_weights = [0.7,0.3]
             blur_weights  = [0.5,0.5]
-            class bangla_name:
-                max_len = 20
-                puncts  = [',','.','-','(',')']
-                mods    = ["মোঃ ","মোছাঃ "]
-                sub_len = 3
-            class english_name:
-                max_len = 20
-                puncts  = [',','.','-','(',')']
-                mods    = ["MD. ","MRS. "]
-                sub_len = 3
-        
+            
+        class name:
+            max_words  = 5
+            min_words  = 2
+            min_len    = 1
+            max_len    = 8
+            total      = 60
+            seps        = ["",".",","]
+            sep_weights = [0.6,0.2,0.2]
+            frag_weights= [0.8,0.2]
+
+
         self.source =   source
         self.card   =   card 
-        self.config =   config    
+        self.config =   config
+        self.name   =   name     
         # extend text
         ## smart card font
         self.initTextFonts(self.card.smart.front.text)
@@ -130,7 +133,62 @@ class Data(object):
             self.english    =   lang_dict["english"]
             self.vocab      =   json_data["vocab"]
 
+    #----------------------------
+    # text construction
+    #----------------------------
+    def __createNameData(self,vocabs,language):
+        num_word=random.randint(self.name.min_words,self.name.max_words)
+        words=[]
+        # fragment
+        if random.choices(population=[0,1],weights=self.name.frag_weights,k=1)[0]==1:
+            use_fragment=True
+        else:
+            use_fragment=False
         
+        for _ in range(num_word):
+            num_vocab=random.randint(self.name.min_len,self.name.max_len)
+            word="".join([random.choice(vocabs) for _ in range(num_vocab)])
+            
+            # check invalid bangla starting:
+            if language=="bangla" and word[0] in ["ঁ","ং","ঃ"]:
+                if num_vocab>1:
+                    word=word[1:]
+                elif num_vocab==1:
+                    word=''
+            # blank word filter
+            if word=='':
+                continue
+
+            # handling . and ,  (seps)       
+            if num_vocab==1 and not use_fragment:
+                if language=="english":word+="."
+                else:word+=random.choice([".",","])
+            elif num_vocab==2 and language=="bangla" and not use_fragment: 
+                word+=random.choices(population=self.name.seps,weights=self.name.sep_weights,k=1)[0]
+            words.append(word)
+        # check length
+        name=" ".join(words)
+        while len(name)>self.name.total:
+            words=words[:-1]
+            name=" ".join(words)
+        
+        if use_fragment:
+            # bracket last word
+            if random.choices(population=[0,1],weights=[0.5,0.5],k=1)[0]==1:
+                words[-1]="("+words[-1]+")"
+            # hyphenate 3 words
+            else:
+                if len(words)>3:
+                    connect=[]
+                    for _ in range(3):
+                        idx=random.choice([i for i in range(len(words))])
+                        connect.append(words[idx])
+                        words[idx]=None
+                        words=[word for word in words if word is not None]
+                    name="-".join(connect)
+                    return name
+        name=" ".join(words)
+        return name
 
     def __getDataFont(self,attr):
         '''
@@ -150,91 +208,45 @@ class Data(object):
         for name,attr in text.items():
             text[name]["font"]=self.__getDataFont(attr)
 
+    
+    
     def __createBnName(self,mod_id):
         '''
             creates bangla name
         '''
+        mods    = ["মোঃ ","মোছাঃ "]
         name        =   ''
-        name_len    =   self.config.bangla_name.max_len
-        max_punct   =   self.config.bangla_name.sub_len
-        max_space   =   self.config.bangla_name.sub_len
         # use starting
         if random.choice([1,0])==1:
             if mod_id is None:
                 mod_id=random.choice([0,1])
-            start=self.config.bangla_name.mods[mod_id]
-            name+=start
-            name_len-=self.config.bangla_name.sub_len  
-        # use puncts
-        if random.choice([1,0,0,0])==1:
-            use_puncts=True
-        else:
-            use_puncts=False
-        name_len=random.randint(1,name_len)
-        # string construction
-        for curr_len in range(name_len):
-            name+=random.choice(self.bangla["graphemes"])
-            if use_puncts and max_punct>0:
-                if random.choice([1,0])==1:
-                    name+=random.choice(self.config.bangla_name.puncts)
-                    max_punct-=1
-            if (curr_len % self.config.bangla_name.sub_len) >0 and curr_len > self.config.english_name.sub_len and max_space >0:
-                if random.choice([1,0])==1:
-                    name+=' '
-                    max_space-=1
-
-        if name[-1]==' ':
-            name=name[:-1]
+            name+=mods[mod_id]
+        #
+        name+=self.__createNameData(self.bangla["graphemes"],"bangla")
         return name
 
     def __createEnName(self,mod_id,type):
         '''
             creates English name
         '''
+        mods    = ["MD. ","MRS. "]
         name        =   ''
-        name_len    =   self.config.english_name.max_len
-        max_punct   =   self.config.english_name.sub_len
-        max_space   =   self.config.english_name.sub_len
         # use starting
         if random.choice([1,0])==1:
             if mod_id is None:
                 mod_id=random.choice([0,1])
-            start=self.config.english_name.mods[mod_id]
-            name+=start
-            name_len-=self.config.english_name.sub_len  
-        # use puncts
-        if random.choice([1,0])==1:
-            use_puncts=True
-        else:
-            use_puncts=False
-        name_len=random.randint(1,name_len)
+            name+=mods[mod_id]
+              
         # determine case
         if type=="smart":
-            use_full_upper_case=True
+            vocabs=self.english["uppercase"]
         else:
-            if random.choice([1,0,0,0])==1:
-                use_full_upper_case=True
+            if random.choice([1,0])==1:
+                vocabs=self.english["uppercase"]
             else:
-                use_full_upper_case=False
+                vocabs=self.english["uppercase"]+self.english["lowercase"]
 
-        # string construction
-        for curr_len in range(name_len):
-            if use_full_upper_case:
-                name+=random.choice(self.english["uppercase"])
-            else:
-                name+=random.choice(self.english["lowercase"]+self.english["uppercase"])
-            
-            if use_puncts and max_punct>0:
-                if random.choice([1,0])==1:
-                    name+=random.choice(self.config.english_name.puncts)
-                    max_punct-=1
-            if (curr_len % self.config.english_name.sub_len) >0 and curr_len > self.config.english_name.sub_len and max_space >0:
-                if random.choice([1,0])==1:
-                    name+=' '
-                    max_space-=1
-        
-        if name[-1]==' ':
-            name=name[:-1]
+        name=self.__createNameData(vocabs,"english")
         return name
     
     def __getNumber(self,len):
@@ -316,6 +328,11 @@ class Data(object):
             draw    =   PIL.ImageDraw.Draw(image)
             draw.text(xy=(0,0),text=v, fill=1, font=font)
             image   =   np.array(image)
+            # crop to size
+            tidx    =   np.where(image>0)
+            y_min,y_max,x_min,x_max = np.min(tidx[0]), np.max(tidx[0]), np.min(tidx[1]), np.max(tidx[1])
+            image=image[y_min:y_max,x_min:x_max]
+            # pad
             image=padToFixedHeightWidth(image,height_loc,width_loc)
             mask[y1:y2,x1:x2]=image
             if k in info_keys:
