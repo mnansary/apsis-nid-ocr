@@ -46,15 +46,12 @@ class CRAFT(BaseDetector):
         img,cfg=padDetectionImage(img)
         # for later
         org_h,org_w,d=img.shape
-        
-        LOG_INFO("padded detection image")
         # predict
         data=cv2.resize(img,(self.img_dim[0],self.img_dim[1]))
         # predict
         data=np.expand_dims(data,axis=0)
         data=data/255
         pred=self.model.predict(data)[0]
-        LOG_INFO("collected prediction")
         # decode
         linkmap=np.squeeze(pred[:,:,1])
         textmap=np.squeeze(pred[:,:,0])
@@ -68,7 +65,8 @@ class CRAFT(BaseDetector):
                                     thresh=0.4,
                                     maxval=1,
                                     type=cv2.THRESH_BINARY)
-        n_components, labels, stats, _ = cv2.connectedComponentsWithStats(np.clip(text_score + link_score, 0, 1).astype('uint8'),connectivity=4)
+        n_components, labels, stats, _ = cv2.connectedComponentsWithStats(np.clip(text_score + link_score, 0, 1).astype('uint8'),
+                                                                          connectivity=4)
         boxes = []
         for component_id in range(1, n_components):
             # Filter by size
@@ -103,5 +101,4 @@ class CRAFT(BaseDetector):
             idx = np.where(segmap>0)            
             y_min,y_max,x_min,x_max = np.min(idx[0]), np.max(idx[0])+1, np.min(idx[1]), np.max(idx[1])+1
             boxes.append([x_min,y_min,x_max,y_max])
-        LOG_INFO("collected boxes")
         return boxes

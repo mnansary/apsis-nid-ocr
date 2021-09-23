@@ -17,7 +17,7 @@ import cv2
 import math
 from glob import glob
 from tqdm.auto import tqdm
-from .utils import LOG_INFO,padWords,stripPads,remove_shadows,threshold_image
+from .utils import *
 from scipy.special import softmax
 #----------------
 # model
@@ -211,46 +211,21 @@ class RobustScanner(object):
 
 
         
-    def porcess_data(self,img,boxes):
+    def porcess_data(self,img,boxes,img_process_func=None,word_process_func=None):
         self.boxes=boxes
         images=[]
         masks=[]
         poss=[]
-        
-        org=np.copy(img)
-        # text binary
-        img=remove_shadows(img)
-        img=threshold_image(img,blur=True)
-        # remove noise
-        img=cv2.merge((img,img,img))
-        img= cv2.fastNlMeansDenoisingColored(img,None,10,10,7,21)
+        if img_process_func is not None:
+            img=img_process_func(img)
+        h,w=img.shape[0],img.shape[1]
 
-        # construct reference
-        img=Image.fromarray(img)
-        con_enhancer = ImageEnhance.Contrast(img)
-        img= con_enhancer.enhance(10)
-        img=np.array(img)
-        # keep a scene copy
-        img=threshold_image(img,blur=True)
-
-
-        h,w=img.shape
-            
         for box in tqdm(boxes):
             # crop    
             x_min,y_min,x_max,y_max=box
-            crop=np.zeros((h,w))
-            crop[y_min:y_max,x_min:x_max]=255-img[y_min:y_max,x_min:x_max]  
-            idx=np.where(crop>0)
-            y_min,y_max,x_min,x_max = np.min(idx[0]), np.max(idx[0]), np.min(idx[1]), np.max(idx[1])
-            word=org[y_min:y_max,x_min:x_max]
-            word=threshold_image(word,blur=False)
-            word=cv2.merge((word,word,word))
-            word=Image.fromarray(word)
-            con_enhancer = ImageEnhance.Contrast(word)
-            word= con_enhancer.enhance(10)
-            word=np.array(word)
-            
+            word=img[y_min:y_max,x_min:x_max] 
+            if word_process_func is not None: 
+                word=word_process_func(word)
             # word
             word,vmask=padWords(word,(self.img_height,self.img_width),ptype="left")
             word=np.expand_dims(word,axis=0) 
@@ -271,7 +246,7 @@ class RobustScanner(object):
         
         return images,masks,poss
 
-    def predict_on_batch(self,batch):
+    def predict_on_batch(self,batch,infer_len):
         '''
             predicts on batch
         '''
@@ -283,7 +258,7 @@ class RobustScanner(object):
         # feat
         enc=self.encm.predict(image)
         pt_attn=self.posm.predict({"pos":pos,"enc_pos":enc,"mask":mask})
-        for i in range(self.pos_max):
+        for i in range(infer_len):
             gt_attn=self.seqm.predict({"label":label,"enc_seq":enc,"mask":mask})
             step_gt_attn=gt_attn[:,i,:]
             step_pt_attn=pt_attn[:,i,:]
@@ -302,12 +277,14 @@ class RobustScanner(object):
             texts.append("".join([self.vocab[l] for l in _label]))
         return texts
 
-    def recognize(self,img,boxes,batch_size=32):
+    def recognize(self,img,boxes,batch_size=32,infer_len=10,img_process_func=None,word_process_func=None):
         '''
             final wrapper
         '''
         texts=[]
-        images,masks,poss=self.porcess_data(img,boxes)
+        images,masks,poss=self.porcess_data(img,boxes,
+                                            img_process_func=img_process_func,
+                                            word_process_func=word_process_func)
         
         for idx in tqdm(range(0,len(images),batch_size)):
             batch={}
@@ -324,5 +301,5 @@ class RobustScanner(object):
             # label
             batch["label"] =np.ones_like(batch["pos"])*self.start_end
             # recog
-            texts+=self.predict_on_batch(batch)
+            texts+=self.predict_on_batch(batch,infer_len)
         return texts

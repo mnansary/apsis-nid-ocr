@@ -16,6 +16,7 @@ colour==0.1.5
 colours==0.3
 cycler==0.10.0
 decorator==4.4.2
+deepface==0.0.68
 defusedxml==0.7.1
 dlib==19.22.1
 easyocr==1.3.2
@@ -23,9 +24,12 @@ efficientnet==1.0.0
 entrypoints==0.3
 face-recognition==1.3.0
 face-recognition-models==0.3.0
+filelock==3.0.12
+Flask==2.0.1
 flatbuffers==1.12
 fonttools==4.22.1
 gast==0.3.3
+gdown==3.13.1
 google-auth==1.30.0
 google-auth-oauthlib==0.4.4
 google-pasta==0.2.0
@@ -39,8 +43,9 @@ ipykernel==5.5.3
 ipython==7.22.0
 ipython-genutils==0.2.0
 ipywidgets==7.6.3
+itsdangerous==2.0.1
 jedi==0.18.0
-Jinja2==2.11.3
+Jinja2==3.0.1
 joblib==1.0.1
 jsonschema==3.2.0
 jupyter==1.0.0
@@ -56,12 +61,13 @@ Keras-Preprocessing==1.1.2
 kiwisolver==1.3.1
 lesscpy==0.14.0
 Markdown==3.3.4
-MarkupSafe==1.1.1
+MarkupSafe==2.0.1
 matplotlib==3.4.1
 mistune==0.8.4
 mkl-fft==1.3.0
 mkl-random==1.1.1
 mkl-service==2.3.0
+mtcnn==0.1.1
 nbclient==0.5.3
 nbconvert==6.0.7
 nbformat==5.1.3
@@ -69,7 +75,7 @@ nest-asyncio==1.5.1
 networkx==2.5.1
 nltk==3.6.2
 notebook==6.3.0
-numpy==1.21.2
+numpy==1.19.5
 oauthlib==3.1.0
 openai==0.6.4
 opencv-python==4.5.3.56
@@ -95,6 +101,7 @@ pydot==1.4.2
 Pygments==2.8.1
 pyparsing==2.4.7
 pyrsistent==0.17.3
+PySocks==1.7.1
 pytesseract==0.3.7
 python-bidi==0.4.2
 python-dateutil==2.8.1
@@ -108,6 +115,7 @@ QtPy==1.9.0
 regex==2021.4.4
 requests==2.25.1
 requests-oauthlib==1.3.0
+retina-face==0.0.5
 rsa==4.7.2
 scikit-image==0.18.1
 scikit-learn==0.24.2
@@ -115,7 +123,7 @@ scipy==1.6.3
 segmentation-models==1.0.1
 Send2Trash==1.5.0
 Shapely==1.7.1
-six @ file:///tmp/build/80754af9/six_1623709665295/work
+six==1.15.0
 soupsieve==2.2.1
 tensorboard==2.5.0
 tensorboard-data-server==0.6.0
@@ -137,7 +145,7 @@ urllib3==1.26.4
 Wand==0.6.6
 wcwidth==0.2.5
 webencodings==0.5.1
-Werkzeug==1.0.1
+Werkzeug==2.0.1
 widgetsnbextension==3.5.1
 wrapt==1.12.1
 xlrd==1.2.0

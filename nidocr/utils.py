@@ -12,6 +12,7 @@ import os
 import cv2 
 import numpy as np
 from PIL import Image, ImageEnhance
+import matplotlib.pyplot as plt 
 #---------------------------------------------------------------
 def LOG_INFO(msg,mcolor='blue'):
     '''
@@ -245,3 +246,50 @@ def padWords(img,dim,ptype="central",pvalue=255):
     return img,mask 
     
 
+#------------------------------------
+# region-utils 
+#-------------------------------------
+def intersection(boxA, boxB):
+    # boxA=ref
+    # boxB=sig
+    # determine the (x, y)-coordinates of the intersection rectangle
+    xA = max(boxA[0], boxB[0])
+    yA = max(boxA[1], boxB[1])
+    xB = min(boxA[2], boxB[2])
+    yB = min(boxA[3], boxB[3])
+    # compute the area of intersection rectangle
+    interArea = abs(max((xB - xA, 0)) * max((yB - yA), 0))
+    x_min,y_min,x_max,y_max=boxB
+    selfArea  = abs((y_max-y_min)*(x_max-x_min))
+    return interArea/selfArea
+
+def localize_box(box,region_boxes):
+    '''
+        lambda localization
+    '''
+    max_ival=0
+    box_id=None
+    for idx,region_box in enumerate(region_boxes):
+        ival=intersection(region_box,box)
+        if ival==1:
+            return idx
+        if ival>max_ival:
+            max_ival=ival
+            box_id=idx
+    return box_id
+
+#----------------------------------------
+# display utils
+#----------------------------------------
+def display_data(info,img,cv_color=True):
+    if type(img)=="str":
+        img=cv2.imread(img)
+        img=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+    else:
+        if cv_color:
+            img=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+    LOG_INFO("------------------------------------------------")
+    LOG_INFO(f"{info}")
+    LOG_INFO("------------------------------------------------")
+    plt.imshow(img)
+    plt.show()
