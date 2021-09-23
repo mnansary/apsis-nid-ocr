@@ -21,25 +21,11 @@ https://meet.google.com/zch-mvtx-hvq
 
 
 
-# Fixed Resources:
-
-- [x] Fonts
-    - [x] Bangla
-    - [x] English
-- [x] Signs
-- [x] Human Face Images
-- [x] Smart Card Template
-- [x] National ID Card Template
-
 # dataLib
-- [ ] data.py
-  - [ ] name construction: coma,hyphen,brackets
-  - [ ] recheck generation
-- [x] fix-vocab
-- [x] text data
-- [x] image data
-- [x] segmentation data
-- [x] recognition data
+- [ ] Combined Data
+  - [ ] maps
+  - [ ] Force Ignore 
+- [ ] recognition data
   - [ ] location based scene text
   - [ ] encoded and padded labels
   - [ ] data gen
