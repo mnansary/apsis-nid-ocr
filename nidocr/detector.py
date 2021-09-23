@@ -36,7 +36,7 @@ class CRAFT(BaseDetector):
         super().__init__(model_weights, img_dim, data_channel, backbone=backbone)
         LOG_INFO("Loaded Detection Model,craft",mcolor="green")
     
-    def detect(self,img):
+    def detect(self,img,det_thresh=0.4,text_thresh=0.7):
         '''
         detects words from an image
         args:
@@ -58,11 +58,11 @@ class CRAFT(BaseDetector):
         img_h,img_w=textmap.shape
 
         _, text_score = cv2.threshold(textmap,
-                                    thresh=0.4,
+                                    thresh=det_thresh,
                                     maxval=1,
                                     type=cv2.THRESH_BINARY)
         _, link_score = cv2.threshold(linkmap,
-                                    thresh=0.4,
+                                    thresh=det_thresh,
                                     maxval=1,
                                     type=cv2.THRESH_BINARY)
         n_components, labels, stats, _ = cv2.connectedComponentsWithStats(np.clip(text_score + link_score, 0, 1).astype('uint8'),
@@ -77,7 +77,7 @@ class CRAFT(BaseDetector):
 
             # If the maximum value within this connected component is less than
             # text threshold, we skip it.
-            if np.max(textmap[labels == component_id]) < 0.7:
+            if np.max(textmap[labels == component_id]) < text_thresh:
                 continue
 
             # Make segmentation map. It is 255 where we find text, 0 otherwise.

@@ -276,6 +276,8 @@ def localize_box(box,region_boxes):
         if ival>max_ival:
             max_ival=ival
             box_id=idx
+    if max_ival==0:
+        return None
     return box_id
 
 #----------------------------------------
