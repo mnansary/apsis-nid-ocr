@@ -3,6 +3,7 @@
 @author:MD.Nazmuddoha Ansary
 """
 from __future__ import print_function
+from PIL.Image import BOX
 #-------------------------
 # imports
 #-------------------------
@@ -23,11 +24,7 @@ class OCR(object):
                 model_dir,
                 use_detector=True,
                 use_recognizer=True,
-                use_facematcher=True,
-                rec_img_process_func=None,
-                rec_word_process_func=None,
-                rec_infer_len=20,
-                rec_batch_size=32):
+                use_facematcher=True):
         '''
             Instantiates an ocr model:
                 methods:
@@ -39,10 +36,6 @@ class OCR(object):
                 use_detector            :   flag for loading detector model
                 use_recognizer          :   flag for loading recognizer model
                 use_facematcher         :   flag for loading facematcher model
-                rec_img_process_func    :   custom function for recognizer reference image processing
-                rec_word_process_func   :   custom function for recognizer word image processing
-                rec_infer_len           :   inference loop length
-                rec_batch_size          :   batch size for inference
         '''
         
         # nid dummy image
@@ -69,17 +62,12 @@ class OCR(object):
         # recognizer weight loading and initialization
         if use_recognizer:
             try:
-                self.rec_img_process_func =rec_img_process_func
-                self.rec_word_process_func=rec_word_process_func
-                self.rec_infer_len        =rec_infer_len
-                self.rec_batch_size       =rec_batch_size
                 self.rec=RobustScanner(model_dir)
                 LOG_INFO("Recognizer Loaded")
                 texts=self.rec.recognize(dummy_img,dummy_boxes,
-                                        batch_size=self.rec_batch_size,
-                                        infer_len=self.rec_infer_len,
-                                        img_process_func=self.rec_img_process_func,
-                                        word_process_func=self.rec_word_process_func)
+                                        batch_size=32,
+                                        infer_len=10,
+                                        word_process_func=None)
                 if len(texts)>0:
                     LOG_INFO("Recognizer Initialized")
 
@@ -120,21 +108,18 @@ class OCR(object):
         if return_dict:
             return {"match":match,"similiarity":similiarity_value}
 
-    def detect_boxes(self,img,card_height=614,card_width=1024,det_thresh=0.4,text_thresh=0.7):
+    def detect_boxes(self,img,det_thresh=0.4,text_thresh=0.7,shift_x_max=5):
         '''
             detection wrapper
             args:
                 img         : the np.array format image to run detction on
-                card_height : base height of a card (used for resizing)
-                card_width  : base width of a card  (used for resizing)
                 det_thresh  : detection threshold to use
                 text_thresh : threshold for text data
+                shift_x_max : pixels to shift x max  
             returns:
                 boxes   :   returns boxes that contains text region
         '''
-        img=cv2.resize(img,(card_width,card_height))
-        img=cleanImage(img)
-        boxes=self.det.detect(img,det_thresh=det_thresh,text_thresh=text_thresh)
+        boxes=self.det.detect(img,det_thresh=det_thresh,text_thresh=text_thresh,shift_x_max=shift_x_max)
         return boxes
     
     def process_boxes(self,text_boxes,region_dict):
@@ -152,39 +137,74 @@ class OCR(object):
             region_fields.append(k)
             region_boxes.append(v)
         # sort boxed
-        text_boxes=sorted(text_boxes,key=lambda k: [k[1], k[0]])
         data=pd.DataFrame({"box":text_boxes})
         # detect field
         data["field"]=data.box.apply(lambda x:localize_box(x,region_boxes))
         data.dropna(inplace=True) 
         data["field"]=data["field"].apply(lambda x:region_fields[int(x)])
-        return data 
+        
+        box_dict={}
+        df_box=[]
+        df_field=[]
+        for field in data.field.unique():
+            df=data.loc[data.field==field]
+            boxes=df.box.tolist()
+            boxes=sorted(boxes, key=lambda x: x[0])
+            box_dict[field]=boxes
+
+            for box in boxes:
+                df_box.append(box)
+                df_field.append(field)
+        
+        df=pd.DataFrame({"box":df_box,"field":df_field})
+        return box_dict,df 
 
     
 
-    # def extract(self,img,card_type,batch_size=32):
-    #     '''
-    #         predict based on datatype
-    #     '''
-    #     if card_type=="nid": src=card.nid.front
-    #     else: src=card.smart.front
-
-    #     img=cv2.resize(img,(card.width,card.height))
-    #     img=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
-    #     # face and sign
-    #     x1,y1,x2,y2=src.face
-    #     face=img[y1:y2,x1:x2]
-    #     x1,y1,x2,y2=src.sign
-    #     sign=img[y1:y2,x1:x2]
-    #     # info
-    #     boxes=[]
-    #     infos=[]
-    #     for k,v in src.box_dict.items():
-    #         boxes.append(v)
-    #         infos.append(k)
-    #     texts=self.recognizer.recognize(img,boxes,batch_size=batch_size)
-    #     data={
-    #             "field":infos,
-    #             "value":texts}
-    #     info=pd.DataFrame(data)
-    #     return face,sign,info                  
+    def extract(self,img,card_type,batch_size=32,shift_x_max=5,word_process_func=None):
+        '''
+            predict based on datatype
+            args:
+                img                 :   image to infer on
+                card_type           :   nid/smart card
+                batch_size          :   batch size for inference
+                word_process_func   :   function to process the word images
+                shift_x_max         :   shifting x values
+        '''
+        if card_type=="nid": 
+            src=card.nid.front
+            two_step_recog=True
+        else: 
+            src=card.smart.front
+            two_step_recog=False
+        
+        # face and sign
+        img=cv2.resize(img,(card.width,card.height))
+        img=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+        x1,y1,x2,y2=src.face
+        face=img[y1:y2,x1:x2]
+        x1,y1,x2,y2=src.sign
+        sign=img[y1:y2,x1:x2]
+        
+        
+        # boxes
+        img=cleanImage(img)
+        img=enhanceImage(img)
+        text_boxes=self.detect_boxes(img,shift_x_max=shift_x_max)
+        box_dict,df=self.process_boxes(text_boxes,src.box_dict)
+        # recognition
+        if two_step_recog:
+            boxes=[]
+            for k,v in box_dict.items():
+                if k!="ID No.":
+                    boxes+=v
+            texts=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=10,word_process_func=word_process_func)
+            #nid
+            boxes=box_dict["ID No."]
+            texts+=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=20,word_process_func=word_process_func)
+        else:
+            boxes=df.box.tolist()
+            texts=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=10,word_process_func=word_process_func)
+        
+        df["text"]=texts
+        return face,sign,df                  

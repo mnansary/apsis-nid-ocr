@@ -245,7 +245,15 @@ def padWords(img,dim,ptype="central",pvalue=255):
     img=cv2.resize(img,(img_width,img_height),fx=0,fy=0, interpolation = cv2.INTER_NEAREST)
     return img,mask 
     
-
+def processCleanWord(img):
+    '''
+        processes a clean word
+    '''
+    img=threshold_image(img,blur=False)
+    y_min,y_max,x_min,x_max=locateData(img,0)
+    img=img[y_min:y_max,x_min:x_max]
+    img=cv2.merge((img,img,img))
+    return img
 #------------------------------------
 # region-utils 
 #-------------------------------------

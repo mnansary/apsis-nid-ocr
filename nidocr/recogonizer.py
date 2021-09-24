@@ -211,13 +211,11 @@ class RobustScanner(object):
 
 
         
-    def porcess_data(self,img,boxes,img_process_func=None,word_process_func=None):
+    def porcess_data(self,img,boxes,word_process_func=None):
         self.boxes=boxes
         images=[]
         masks=[]
         poss=[]
-        if img_process_func is not None:
-            img=img_process_func(img)
         h,w=img.shape[0],img.shape[1]
 
         for box in tqdm(boxes):
@@ -277,14 +275,12 @@ class RobustScanner(object):
             texts.append("".join([self.vocab[l] for l in _label]))
         return texts
 
-    def recognize(self,img,boxes,batch_size=32,infer_len=10,img_process_func=None,word_process_func=None):
+    def recognize(self,img,boxes,batch_size=32,infer_len=10,word_process_func=None):
         '''
             final wrapper
         '''
         texts=[]
-        images,masks,poss=self.porcess_data(img,boxes,
-                                            img_process_func=img_process_func,
-                                            word_process_func=word_process_func)
+        images,masks,poss=self.porcess_data(img,boxes,word_process_func=word_process_func)
         
         for idx in tqdm(range(0,len(images),batch_size)):
             batch={}

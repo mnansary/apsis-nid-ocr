@@ -36,7 +36,7 @@ class CRAFT(BaseDetector):
         super().__init__(model_weights, img_dim, data_channel, backbone=backbone)
         LOG_INFO("Loaded Detection Model,craft",mcolor="green")
     
-    def detect(self,img,det_thresh=0.4,text_thresh=0.7):
+    def detect(self,img,det_thresh=0.4,text_thresh=0.7,shift_x_max=5):
         '''
         detects words from an image
         args:
@@ -100,5 +100,5 @@ class CRAFT(BaseDetector):
             segmap=cv2.resize(segmap,(org_w,org_h))
             idx = np.where(segmap>0)            
             y_min,y_max,x_min,x_max = np.min(idx[0]), np.max(idx[0])+1, np.min(idx[1]), np.max(idx[1])+1
-            boxes.append([x_min,y_min,x_max,y_max])
+            boxes.append([x_min-shift_x_max,y_min,x_max-shift_x_max,y_max])
         return boxes

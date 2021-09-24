@@ -25,6 +25,7 @@ https://meet.google.com/zch-mvtx-hvq
 - [ ] Combined Data
   - [ ] maps
   - [ ] Force Ignore 
+- [ ] Add detection model
 - [ ] recognition data
   - [ ] location based scene text
   - [ ] encoded and padded labels
