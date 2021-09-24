@@ -9,6 +9,33 @@ import random
 import cv2 
 import numpy as np 
 import matplotlib.pyplot as plt
+from .utils import Modifier
+#--------------------
+# mask data
+#--------------------
+class nid:
+    front = {
+                1:[26, 219, 252, 451],
+                2:[26, 461, 252, 574],
+                3:[420, 230, 1000, 260],
+                4:[420, 290, 1000, 320],
+                5:[420, 350, 1000, 380],
+                6:[420, 410, 1000, 440],
+                7:[550, 470, 1000, 500],
+                8:[500, 550, 1000, 580]
+            }
+class smart:
+    front={
+            1:[57, 182, 319, 481],
+            2:[57, 494, 319, 591],
+            3:[325, 200, 750, 220],
+            4:[325, 280, 750, 300],
+            5:[325, 350, 750, 370],
+            6:[325, 440, 750, 460],
+            7:[465, 510, 750, 530],
+            8:[465, 560, 750, 580]
+            }
+
 #--------------------
 # augment data
 #--------------------
@@ -91,7 +118,7 @@ def get_warped_image(img,mask,src,config,warp_type):
         dst= [[x1,d1],[x2,y2],[x3,y3],[x4,d2]]
     M   = cv2.getPerspectiveTransform(np.float32(src),np.float32(dst))
     img = cv2.warpPerspective(img, M, (width,height))
-    mask= cv2.warpPerspective(mask, M, (width,height))
+    mask= cv2.warpPerspective(mask, M, (width,height),flags=cv2.INTER_NEAREST)
     return img,mask,dst
 #---------------------------------------------------------------------------------------
 def augment_img_base(img_path,config):
@@ -105,12 +132,21 @@ def augment_img_base(img_path,config):
         return: 
             augmented image,augment_mask,augmented_location
     '''
-    
+    if "nid" in img_path:
+        card=nid
+    else:
+        card=smart
+
     img=cv2.imread(img_path)
     height,width,d=img.shape
     warp_types=[{"p1-p2":width},{"p2-p3":height},{"p3-p4":width},{"p4-p1":height}]
     
-    mask=np.ones((height,width))*255
+    mask=np.ones((height,width))
+    # create region mask
+    for k,v in card.front.items():
+        x_min,y_min,x_max,y_max=v
+        mask[y_min:y_max,x_min:x_max]=k+1 
+
     curr_coord=[[0,0], 
                 [width-1,0], 
                 [width-1,height-1], 
@@ -130,13 +166,15 @@ def augment_img_base(img_path,config):
     img,M =rotate_image(img,angle)
     mask,_=rotate_image(mask,angle)
     curr_coord=get_image_coords(curr_coord,M)
+    
     # scope rotation
-    if random.choice([0,1,1,1])==1:
-        flip_op=random.choice([-90,180,90])                  
-        img,M=rotate_image(img,flip_op)
-        mask,_=rotate_image(mask,flip_op)
-        curr_coord=get_image_coords(curr_coord,M)
-        
+    if config.use_scope_rotation:
+        if random.choice([0,1,1,1])==1:
+            flip_op=random.choice([-90,180,90])                  
+            img,M=rotate_image(img,flip_op)
+            mask,_=rotate_image(mask,flip_op)
+            curr_coord=get_image_coords(curr_coord,M)
+            
    
     return img,mask,curr_coord
 
@@ -174,29 +212,6 @@ def pad_image_mask(img,mask,coord,config):
     return img,mask,coord
     
 
-def blurrImg(img):
-    '''
-        blurs an image
-    '''
-    kernel = np.ones((5,5),np.float32)/25
-    return cv2.filter2D(img,-1,kernel)
-def addNoise(img):
-    '''
-        adds gaussian noise to image
-    '''
-    row, col, _ = img.shape
-    # Gaussian distribution parameters
-    mean = 0
-    var = 0.1
-    sigma = var ** 0.5
-    # create noisy image
-    gaussian = np.random.random((row, col, 1)).astype(np.float32)
-    gaussian = np.concatenate((gaussian, gaussian, gaussian), axis = 2)
-    img = img*0.75+gaussian*0.25
-    img=img.astype("uint8")
-    return img
- 
-
 def render_data(backgen,img_path,config):
     '''
         renders proper data for modeling
@@ -205,6 +220,7 @@ def render_data(backgen,img_path,config):
             img_path: image to render
             config  : config for augmentation
     '''
+    aug=Modifier()
     # base augment
     img,mask,coord=augment_img_base(img_path,config)    
     # pad
@@ -218,11 +234,5 @@ def render_data(backgen,img_path,config):
         back=(255*np.ones(img.shape)).astype("uint8")
 
     back[mask>0]=img[mask>0]
-
-    # gen ops
-    if random.choices(population=[0,1],weights=config.noise_weights,k=1)[0]==1:
-        back=addNoise(back)
-    if random.choices(population=[0,1],weights=config.blur_weights,k=1)[0]==1:
-        back=blurrImg(back)
-    
+    back=aug.noise(back)
     return back,mask,coord

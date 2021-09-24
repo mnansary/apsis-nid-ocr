@@ -10,6 +10,7 @@ from termcolor import colored
 import os 
 import cv2 
 import numpy as np
+import random
 from tqdm import tqdm
 #---------------------------------------------------------------
 def LOG_INFO(msg,mcolor='blue'):
@@ -204,3 +205,91 @@ def correctPadding(img,dim,ptype="central",pvalue=255):
     # error avoid
     img=cv2.resize(img,(img_width,img_height),fx=0,fy=0, interpolation = cv2.INTER_NEAREST)
     return img,mask 
+#----------------------------------------
+# noise utils
+#----------------------------------------
+class Modifier:
+    def __init__(self,
+                min_ops=2,
+                max_ops=6,
+                blur_kernel_size_max=8,
+                blur_kernel_size_min=3,
+                bi_filter_dim_min=7,
+                bi_filter_dim_max=12,
+                bi_filter_sigma_max=80,
+                bi_filter_sigma_min=70):
+
+        self.blur_kernel_size_max   =   blur_kernel_size_max
+        self.blur_kernel_size_min   =   blur_kernel_size_min
+        self.bi_filter_dim_min      =   bi_filter_dim_min
+        self.bi_filter_dim_max      =   bi_filter_dim_max
+        self.bi_filter_sigma_min    =   bi_filter_sigma_min
+        self.bi_filter_sigma_max    =   bi_filter_sigma_max
+        self.min_ops                =   min_ops
+        self.max_ops                =   max_ops
+        self.ops                    =   [self.__blur,
+                                         self.__gaussBlur,
+                                         self.__medianBlur,
+                                         self.__biFilter,
+                                         self.__gaussNoise,
+                                         self.__addBrightness]
+
+    def __initParams(self):
+        self.blur_kernel_size=random.randrange(self.blur_kernel_size_min,
+                                               self.blur_kernel_size_max, 
+                                               2)
+        self.bi_filter_dim   =random.randrange(self.bi_filter_dim_min,
+                                               self.bi_filter_dim_max, 
+                                               2)
+        self.bi_filter_sigma =random.randint(self.bi_filter_sigma_min,
+                                             self.bi_filter_sigma_max)
+        self.num_ops         =random.randint(self.min_ops,self.max_ops)
+
+    def __blur(self,img):
+        return cv2.blur(img,
+                        (self.blur_kernel_size,
+                        self.blur_kernel_size),
+                         0)
+    def __gaussBlur(self,img):
+        return cv2.GaussianBlur(img,
+                                (self.blur_kernel_size,
+                                self.blur_kernel_size),
+                                0) 
+    def __medianBlur(self,img):
+        return  cv2.medianBlur(img,
+                               self.blur_kernel_size)
+    def __biFilter(self,img):
+        return cv2.bilateralFilter(img,
+                                   self.bi_filter_dim,
+                                   self.bi_filter_sigma,
+                                   self.bi_filter_sigma)
+
+    def __gaussNoise(self,img):
+        h,w,d=img.shape
+        noise=np.random.normal(0,1,img.size)
+        noise=noise.reshape(h,w,d)
+        noise=noise.astype("uint8")
+        return cv2.add(img,noise)
+    
+    def __addBrightness(self,image):    
+        ## Conversion to HLS
+        image_HLS = cv2.cvtColor(image,cv2.COLOR_RGB2HLS)     
+        image_HLS = np.array(image_HLS, dtype = np.float64)
+        ## generates value between 0.5 and 1.5       
+        random_brightness_coefficient = np.random.uniform()+0.5  
+        ## scale pixel values up or down for channel 1(Lightness) 
+        image_HLS[:,:,1] = image_HLS[:,:,1]*random_brightness_coefficient
+        ##Sets all values above 255 to 255    
+        image_HLS[:,:,1][image_HLS[:,:,1]>255]  = 255     
+        image_HLS = np.array(image_HLS, dtype = np.uint8)    
+        ## Conversion to RGB
+        image_RGB = cv2.cvtColor(image_HLS,cv2.COLOR_HLS2RGB)     
+        return image_RGB
+    
+    def noise(self,img):
+        self.__initParams()
+        for _ in range(self.num_ops):
+            img=img.astype("uint8")
+            img=random.choice(self.ops)(img)
+        return img
+    

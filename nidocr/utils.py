@@ -13,6 +13,7 @@ import cv2
 import numpy as np
 from PIL import Image, ImageEnhance
 import matplotlib.pyplot as plt 
+import random
 #---------------------------------------------------------------
 def LOG_INFO(msg,mcolor='blue'):
     '''
