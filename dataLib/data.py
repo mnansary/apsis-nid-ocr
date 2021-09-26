@@ -9,7 +9,7 @@ import os
 from glob import glob
 from unicodedata import name
 from tqdm.auto import tqdm
-from .utils import LOG_INFO,padToFixedHeightWidth 
+from .utils import LOG_INFO,padToFixedHeightWidth,GraphemeParser 
 import PIL
 import PIL.ImageFont,PIL.Image,PIL.ImageDraw
 import random
@@ -19,6 +19,7 @@ import cv2
 import numpy as np 
 import matplotlib.pyplot as plt
 import math
+GP=GraphemeParser()
 #--------------------
 # source
 #--------------------
@@ -286,6 +287,8 @@ class Data(object):
         '''
             creates an image of card front side data
         '''
+        template_label={}
+        iden=2
         if type=="smart":
             card_front=self.card.smart.front
             info_color=(depth_color,depth_color,depth_color)
@@ -312,8 +315,10 @@ class Data(object):
         # text data
         info_keys=["nid","dob"]
         
+        # text data processing
         text=self.__createTextCardFront(type)
         h_t,w_t,d=template.shape
+        template_mask=np.zeros((h_t,w_t))
         for k,v in text.items():
             # res
             font=card_front.text[k]["font"]
@@ -322,12 +327,35 @@ class Data(object):
             x1,y1,x2,y2=card_front.text[k]["location"]
             width_loc=x2-x1
             height_loc=y2-y1
-            (width,height), (offset_x, offset_y) = font.font.getsize(v)
-            # data
-            image   =   PIL.Image.new(mode='L', size=(width+offset_x,height+offset_y))
-            draw    =   PIL.ImageDraw.Draw(image)
-            draw.text(xy=(0,0),text=v, fill=1, font=font)
-            image   =   np.array(image)
+            
+            # comps
+            comps=GP.word2grapheme(v)
+            w_text,h_text=font.getsize(v)
+            comp_str=''
+            images=[]
+            label={}
+            for comp in comps:
+                comp_str+=comp
+                # data
+                image   =   PIL.Image.new(mode='L', size=(w_text,h_text))
+                draw    =   PIL.ImageDraw.Draw(image)
+                draw.text(xy=(0,0),text=comp_str, fill=1, font=font)
+                image   =   np.array(image)
+                images.append(image)
+                label[iden]=comp
+                iden+=1
+            
+            img=sum(images)
+            # offset
+            vals=list(np.unique(img))
+            vals=sorted(vals,reverse=True)
+            vals=vals[:-1]
+            
+            image=np.zeros(img.shape)
+            for lv,l in zip(vals,label.keys()):
+                if l!=' ':
+                    image[img==lv]=l
+            
             # crop to size
             tidx    =   np.where(image>0)
             y_min,y_max,x_min,x_max = np.min(tidx[0]), np.max(tidx[0]), np.min(tidx[1]), np.max(tidx[1])
@@ -335,12 +363,14 @@ class Data(object):
             # pad
             image=padToFixedHeightWidth(image,height_loc,width_loc)
             mask[y1:y2,x1:x2]=image
+            template_mask[y1:y2,x1:x2]=image
             if k in info_keys:
                 template[mask>0]=info_color
             else:
                 template[mask>0]=(depth_color,depth_color,depth_color)
+            template_label[k]=label
             
-        return template,text
+        return template,template_mask,template_label
     
     def backgroundGenerator(self,dim=(1024,1024)):
         '''

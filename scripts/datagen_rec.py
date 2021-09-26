@@ -9,6 +9,7 @@ import sys
 sys.path.append('../')
 
 import argparse
+from ast import literal_eval
 from dataLib.data import Data
 from dataLib.utils import create_dir,LOG_INFO,remove_shadows,threshold_image
 from tqdm.auto import tqdm
@@ -34,6 +35,7 @@ def main(args):
     card_data_csv=os.path.join(card_dir,"data.csv")
     df=pd.read_csv(card_data_csv)
     df["img_path"]=df["file"].progress_apply(lambda x:os.path.join(card_img_dir,x))
+    df["word_divs"]=df["word_divs"].progress_apply(lambda x:literal_eval(x))
     dicts=[]
     for didx in tqdm(range(len(df))):
         try:
@@ -42,6 +44,7 @@ def main(args):
             # img_path
             img_path=text_dict["img_path"][didx]
             iden    =text_dict["file"][didx].split(".")[0]
+            divs    =text_dict["word_divs"]
             # card type
             if "nid" in img_path:
                 card_text=src.card.nid.front.text

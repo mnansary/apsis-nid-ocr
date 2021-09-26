@@ -22,18 +22,15 @@ https://meet.google.com/zch-mvtx-hvq
 
 
 # dataLib
-- [ ] Combined Data
-  - [ ] maps
-  - [ ] Force Ignore 
-- [ ] Add detection model
-- [ ] recognition data
-  - [ ] location based scene text
-  - [ ] encoded and padded labels
-  - [ ] data gen
-  - [ ] tfrecords
-  - [ ] train
-  - [ ] infer
-- [ ] segmentation/data crop: version:2 modeling
+- [ ] marked masking
+- [ ] craft data
+- [ ] rs data
+
+# Tasks
+
+- [ ] ZXING: Colab Working Example: Mobassir
+- [ ] Noise Class: Manually Check : Randomization Rezwan
+- [ ] 4 point warp perspective : cropping ROI
 
 
 # smart card creation Location: 

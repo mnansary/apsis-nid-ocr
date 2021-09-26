@@ -22,6 +22,7 @@ def main(args):
     save_dir=args.save_dir
     save_dir=create_dir(save_dir,"cards")
     img_dir =create_dir(save_dir,"images")
+    mask_dir=create_dir(save_dir,"masks")
     data_csv =os.path.join(save_dir,"data.csv")
     n_data=int(args.num_data)
     src=Data(data_dir)
@@ -32,9 +33,10 @@ def main(args):
     for card_type in ["nid","smart"]:
         for i in tqdm(range(n_data)):
             try:
-                image,data=src.createCardFront(card_type)
+                image,mask,data=src.createCardFront(card_type)
                 # save
                 cv2.imwrite(os.path.join(img_dir,f"{card_type}_{i}.png"),image)
+                cv2.imwrite(os.path.join(mask_dir,f"{card_type}_{i}.png"),mask)
                 data["file"]=f"{card_type}_{i}.png"
                 dicts.append(data)    
             except Exception as e:
