@@ -42,14 +42,16 @@ def to_tfrecord(df,save_dir,r_num):
     with tf.io.TFRecordWriter(tfrecord_path) as writer:    
         for idx in range(len(df)):
             image_path=df.iloc[idx,0]
-            label     =df.iloc[idx,1]
-            mask      =df.iloc[idx,2]
+            ulabel    =df.iloc[idx,1]
+            glabel    =df.iloc[idx,2]
+            mask      =df.iloc[idx,3]
             #image
             with(open(image_path,'rb')) as fid:
                 image_bytes=fid.read()
             
             data ={ 'image':_bytes_feature(image_bytes),
-                    'label':_int64_feature(label),
+                    'ulabel':_int64_feature(ulabel),
+                    'glabel':_int64_feature(glabel),
                     'mask':_int64_feature(mask)
             }
             
@@ -82,7 +84,8 @@ def main(args):
     save_dir=create_dir(recog_dir,"tfrecords")
     data_csv=os.path.join(recog_dir,"data.csv")
     df=pd.read_csv(data_csv)
-    df.label=df.label.progress_apply(lambda x: literal_eval(x))
+    df.label_unicode=df.label_unicode.progress_apply(lambda x: literal_eval(x))
+    df.label_grapheme=df.label_grapheme.progress_apply(lambda x: literal_eval(x))
     df["mask"]=df["mask"].progress_apply(lambda x: literal_eval(x))
     
     genTFRecords(df,save_dir)

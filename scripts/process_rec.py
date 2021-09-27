@@ -13,28 +13,18 @@ import cv2
 import os
 import json
 import numpy as np
-from dataLib.utils import LOG_INFO, correctPadding
+from dataLib.utils import LOG_INFO, correctPadding,GraphemeParser
 import math
 import pandas as pd
 from tqdm.auto import tqdm
 tqdm.pandas()
 #--------------------------------
-# vocab
-#--------------------------------
-with open("../vocab.json") as f:
-    vocab = json.load(f)["vocab"]
-
-start_end_value=len(vocab)
-pad_value =start_end_value+1
-LOG_INFO(f"start-end:{start_end_value}")
-LOG_INFO(f"pad:{pad_value}")
-
-#--------------------------------
 # main
 #--------------------------------
+GP=GraphemeParser()
 
 
-def pad_label(x,max_len):
+def pad_label(x,max_len,pad_value,start_end_value):
     '''
         lambda function to create padded label for robust scanner
     '''
@@ -42,6 +32,14 @@ def pad_label(x,max_len):
     pad=[pad_value for _ in range(max_len-len(x))]
     return x+pad
     
+def encode_label(x,vocab):
+    label=[]
+    for ch in x:
+        try:
+            label.append(vocab.index(ch))
+        except Exception as e:
+            return None
+    return label
 
 def main(args):
     #-----------------
@@ -57,23 +55,41 @@ def main(args):
     data_csv =os.path.join(recog_dir,"data.csv")
     df=pd.read_csv(data_csv)
     df.dropna(inplace=True)
+    
+    #--------------------------------
+    # vocab
+    #--------------------------------
+    with open("../vocab.json") as f:
+        vocab = json.load(f)
+    uvocab =vocab["unicode"]
+    gvocab=vocab["grapheme"]
+
+    
     #--- df processing-----------
     df["img_path"]=df["filename"].progress_apply(lambda x:os.path.join(img_dir,x))
     # unicodes
     df["unicodes"]=df.text.progress_apply(lambda x: [u for u in x])
+    # graphemes
+    df["graphemes"]=df.text.progress_apply(lambda x: GP.word2grapheme(x))
     # encoding
-    df["encoded"]=df.unicodes.progress_apply(lambda x:[vocab.index(u) for u in x])
-    # length correction
-    df["label_length"]=df.encoded.progress_apply(lambda x:len(x))
-
-    LOG_INFO(f"Max Label Lenght:{max(df['label_length'].tolist())}")
-    
-    df["label_length"]=df["label_length"].progress_apply(lambda x: x if x < max_len else None)
+    df["encoded_unicodes"]=df.unicodes.progress_apply(lambda x:encode_label(x,uvocab))
     df.dropna(inplace=True)
-    LOG_INFO(f"Max Label Lenght after correction:{max(df['label_length'].tolist())}")
-    
+    df["encoded_graphemes"]=df.graphemes.progress_apply(lambda x:encode_label(x,gvocab))
+    df.dropna(inplace=True)
     # label formation
-    df["label"]=df.encoded.progress_apply(lambda x:pad_label(x,max_len))
+    LOG_INFO("Unicode")
+    start_end_value=len(uvocab)
+    pad_value =start_end_value+1
+    LOG_INFO(f"start-end:{start_end_value}")
+    LOG_INFO(f"pad:{pad_value}")
+    df["label_unicode"]=df.encoded_unicodes.progress_apply(lambda x:pad_label(x,max_len,pad_value,start_end_value))
+
+    LOG_INFO("Graphemes")
+    start_end_value=len(gvocab)
+    pad_value =start_end_value+1
+    LOG_INFO(f"start-end:{start_end_value}")
+    LOG_INFO(f"pad:{pad_value}")
+    df["label_grapheme"]=df.encoded_graphemes.progress_apply(lambda x:pad_label(x,max_len,pad_value,start_end_value))
 
     masks=[]
     #--- resize and pad images and create masks
@@ -96,7 +112,7 @@ def main(args):
             masks.append(None)
     df["mask"]=masks
     df.dropna(inplace=True)
-    df=df[["img_path","label","mask","text"]]
+    df=df[["img_path","label_unicode","label_grapheme","mask","text"]]
     df.to_csv(data_csv,index=False)
 
 if __name__=="__main__":
