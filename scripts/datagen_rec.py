@@ -32,10 +32,11 @@ def main(args):
     LOG_INFO(save_dir)
     # data division
     card_img_dir =os.path.join(card_dir,"images")
+    card_mask_dir=os.path.join(card_dir,"masks")
     card_data_csv=os.path.join(card_dir,"data.csv")
     df=pd.read_csv(card_data_csv)
     df["img_path"]=df["file"].progress_apply(lambda x:os.path.join(card_img_dir,x))
-    df["word_divs"]=df["word_divs"].progress_apply(lambda x:literal_eval(x))
+    
     dicts=[]
     for didx in tqdm(range(len(df))):
         try:

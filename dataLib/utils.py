@@ -12,6 +12,7 @@ import cv2
 import numpy as np
 import random
 from tqdm import tqdm
+from PIL import Image, ImageEnhance
 #---------------------------------------------------------------
 def LOG_INFO(msg,mcolor='blue'):
     '''
@@ -75,7 +76,7 @@ def remove_shadows(img):
     img = cv2.merge(result_norm_planes)
     return img
 #---------------------------------------------------------------
-def threshold_image(img):
+def threshold_image(img,blur=True):
     '''
         threshold an image
     '''
@@ -83,8 +84,35 @@ def threshold_image(img):
     # grayscale
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # threshold
+    if blur:
+        img = cv2.GaussianBlur(img,(5,5),0)
     _,img = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     return img
+
+
+def cleanImage(img,remove_shadow=True):
+    '''
+        cleans an image 
+    '''
+    # text binary
+    if remove_shadow:
+        img=remove_shadows(img)
+    img=threshold_image(img,blur=True)
+    # remove noise
+    img=cv2.merge((img,img,img))
+    img= cv2.fastNlMeansDenoisingColored(img,None,10,10,7,21)
+    return img
+
+def enhanceImage(img,factor=10):
+    '''
+        enhances an image based on contrast
+    '''
+    img=Image.fromarray(img)
+    con_enhancer = ImageEnhance.Contrast(img)
+    img= con_enhancer.enhance(factor)
+    img=np.array(img)
+    return img 
+
 
 #---------------------------------------------------------------
 def padToFixedHeightWidth(img,h_max,w_max):
@@ -211,8 +239,8 @@ def correctPadding(img,dim,ptype="central",pvalue=255):
 class Modifier:
     def __init__(self,
                 min_ops=2,
-                max_ops=6,
-                blur_kernel_size_max=8,
+                max_ops=5,
+                blur_kernel_size_max=6,
                 blur_kernel_size_min=3,
                 bi_filter_dim_min=7,
                 bi_filter_dim_max=12,
@@ -227,13 +255,7 @@ class Modifier:
         self.bi_filter_sigma_max    =   bi_filter_sigma_max
         self.min_ops                =   min_ops
         self.max_ops                =   max_ops
-        self.ops                    =   [self.__blur,
-                                         self.__gaussBlur,
-                                         self.__medianBlur,
-                                         self.__biFilter,
-                                         self.__gaussNoise,
-                                         self.__addBrightness]
-
+        
     def __initParams(self):
         self.blur_kernel_size=random.randrange(self.blur_kernel_size_min,
                                                self.blur_kernel_size_max, 
@@ -244,6 +266,13 @@ class Modifier:
         self.bi_filter_sigma =random.randint(self.bi_filter_sigma_min,
                                              self.bi_filter_sigma_max)
         self.num_ops         =random.randint(self.min_ops,self.max_ops)
+        self.ops             =   [  self.__blur,
+                                    self.__gaussBlur,
+                                    self.__medianBlur,
+                                    #self.__biFilter,
+                                    self.__gaussNoise,
+                                    self.__addBrightness]
+
 
     def __blur(self,img):
         return cv2.blur(img,
@@ -264,12 +293,15 @@ class Modifier:
                                    self.bi_filter_sigma,
                                    self.bi_filter_sigma)
 
-    def __gaussNoise(self,img):
-        h,w,d=img.shape
-        noise=np.random.normal(0,1,img.size)
-        noise=noise.reshape(h,w,d)
-        noise=noise.astype("uint8")
-        return cv2.add(img,noise)
+    def __gaussNoise(self,image):
+        row,col,ch= image.shape
+        mean = 0
+        var = 0.1
+        sigma = var**0.5
+        gauss = np.random.normal(mean,sigma,(row,col,ch))
+        gauss = gauss.reshape(row,col,ch)
+        image = image+gauss
+        return image.astype("uint8")
     
     def __addBrightness(self,image):    
         ## Conversion to HLS
@@ -290,7 +322,8 @@ class Modifier:
         self.__initParams()
         for _ in range(self.num_ops):
             img=img.astype("uint8")
-            img=random.choice(self.ops)(img)
+            idx = random.choice(range(len(self.ops)))
+            img = self.ops.pop(idx)(img)
         return img
 #--------------------
 # Parser class

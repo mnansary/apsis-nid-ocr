@@ -334,27 +334,36 @@ class Data(object):
             comp_str=''
             images=[]
             label={}
-            for comp in comps:
+            word_labels=[]
+            comb_label={}
+            for idx,comp in enumerate(comps):
                 comp_str+=comp
-                # data
-                image   =   PIL.Image.new(mode='L', size=(w_text,h_text))
-                draw    =   PIL.ImageDraw.Draw(image)
-                draw.text(xy=(0,0),text=comp_str, fill=1, font=font)
-                image   =   np.array(image)
-                images.append(image)
-                label[iden]=comp
-                iden+=1
-            
+                if comp!=' ': 
+                    # data
+                    image   =   PIL.Image.new(mode='L', size=(w_text,h_text))
+                    draw    =   PIL.ImageDraw.Draw(image)
+                    draw.text(xy=(0,0),text=comp_str, fill=1, font=font)
+                    image   =   np.array(image)
+                    images.append(image)
+                    label[iden]=comp
+                    comb_label[iden]=comp
+                    iden+=1
+
+                else:
+                    word_labels.append(label)
+                    label={}
+                if idx==len(comps)-1 and comp!=' ':
+                    word_labels.append(label)
+                    label={}
+                
             img=sum(images)
             # offset
             vals=list(np.unique(img))
             vals=sorted(vals,reverse=True)
             vals=vals[:-1]
-            
             image=np.zeros(img.shape)
-            for lv,l in zip(vals,label.keys()):
-                if l!=' ':
-                    image[img==lv]=l
+            for lv,l in zip(vals,comb_label.keys()):
+                image[img==lv]=l
             
             # crop to size
             tidx    =   np.where(image>0)
@@ -368,7 +377,7 @@ class Data(object):
                 template[mask>0]=info_color
             else:
                 template[mask>0]=(depth_color,depth_color,depth_color)
-            template_label[k]=label
+            template_label[k]=word_labels
             
         return template,template_mask,template_label
     
