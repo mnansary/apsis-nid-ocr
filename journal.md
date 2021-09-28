@@ -22,9 +22,9 @@ https://meet.google.com/zch-mvtx-hvq
 
 
 # dataLib
-- [x] marked masking
-- [x] craft data
-- [x] rs data
+- [ ] rs-grapheme-clean
+- [ ] det-craft
+- [ ] seg-cards
 
 # Tasks
 

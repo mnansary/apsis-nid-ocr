@@ -104,6 +104,7 @@ def main(args):
     df.coord=df.coord.progress_apply(lambda x: literal_eval(x))
     df.file =df.file.progress_apply(lambda x: os.path.join(img_dir,x))
     df.coord=df.coord.progress_apply(lambda x: flat_coord(x))
+    df=df.sample(frac=1)
     genTFRecords(df,save_dir)
 
 if __name__=="__main__":
