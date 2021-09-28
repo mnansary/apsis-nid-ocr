@@ -48,6 +48,8 @@ def main(args):
     
     nid_df  =nid_df[:num_data]
     smart_df=smart_df[:num_data]
+    nid_df=nid_df.sample(frac=1).reset_index(drop=True)
+    smart_df=smart_df.sample(frac=1).reset_index(drop=True)
     
 
     dicts=[]

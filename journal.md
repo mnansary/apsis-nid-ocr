@@ -25,6 +25,7 @@ https://meet.google.com/zch-mvtx-hvq
 - [ ] rs-grapheme-clean
 - [ ] det-craft
 - [ ] seg-cards
+- [ ] Version:2 TImining
 
 # Tasks
 

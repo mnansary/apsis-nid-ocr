@@ -8,9 +8,12 @@ rec_path="${save_path}recog/"
 clean_rec_path="${save_path}recog/clean/"
 noisy_rec_path="${save_path}recog/noisy/"
 # card data
-# python datagen_card.py $src_path $save_path --num_data 10
+#python datagen_card.py $src_path $save_path --num_data 10
+# det data
+python datagen_det.py $card_path $save_path 
 # seg data
 python datagen_seg.py $src_path $card_path $save_path 
+
 # clean rec
 # python datagen_rec.py $src_path $card_path $save_path --add_noise False
 

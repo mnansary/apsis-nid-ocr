@@ -129,6 +129,26 @@ def get_maps(cbox,gaussian_heatmap,heat_map,link_map,prev,idx):
 
     return heat_map,link_map,prev
 #----------------------------------------------------------------------------
+def pad_map(img):
+    h,w=img.shape
+    if h>w:
+        # pad widths
+        pad_width =h-w
+        # pads
+        pad =np.zeros((h,pad_width))
+        # pad
+        img =np.concatenate([img,pad],axis=1)
+        
+    elif w>h:
+        # pad height
+        pad_height =w-h
+        # pads
+        pad =np.zeros((pad_height,w))
+        # pad
+        img =np.concatenate([img,pad],axis=0)
+    return img.astype("uint8")
+
+
 def det_data(img,labels,heatmap):
     '''
         @author
