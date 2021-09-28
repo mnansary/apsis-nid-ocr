@@ -141,11 +141,12 @@ def augment_img_base(img_path,config):
     height,width,d=img.shape
     warp_types=[{"p1-p2":width},{"p2-p3":height},{"p3-p4":width},{"p4-p1":height}]
     
-    mask=np.ones((height,width))
-    # create region mask
-    for k,v in card.front.items():
-        x_min,y_min,x_max,y_max=v
-        mask[y_min:y_max,x_min:x_max]=k+1 
+    mask=np.ones((height,width))*255
+    mask=mask.astype("uint8")
+    # # create region mask
+    # for k,v in card.front.items():
+    #     x_min,y_min,x_max,y_max=v
+    #     mask[y_min:y_max,x_min:x_max]=k+1 
 
     curr_coord=[[0,0], 
                 [width-1,0], 
