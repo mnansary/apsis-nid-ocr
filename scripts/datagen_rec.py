@@ -86,7 +86,7 @@ def main(args):
                     filename=f"{img_count}.png"
                     cv2.imwrite(os.path.join(img_dir,filename),word_img)
                     img_count+=1
-                    dicts.append({"filename":filename,"text":text_word})
+                    dicts.append({"filename":filename,"text":text_word.lower()})
         except Exception as e:
             pass
     df=pd.DataFrame(dicts)
