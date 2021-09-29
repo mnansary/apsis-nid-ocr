@@ -48,7 +48,7 @@ class Extractor(object):
         # process if path is provided
         if type(img)==str:
             img=cv2.imread(img)
-        org=np.copy(img)
+            img=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
         # dims
         h,w,d=img.shape
         # process
@@ -60,25 +60,7 @@ class Extractor(object):
         card_type=self.labels[np.argmax(pred[0][0])]
         card_map =pred[1][0]
         card_map=cv2.resize(card_map,(w,h))
-        # find region
-        y_min,y_max,x_min,x_max=locateData(card_map,0)
-        org=org[y_min:y_max,x_min:x_max]
-        card_map=card_map[y_min:y_max,x_min:x_max]
-        
-         # find max contour (4 point)
-        contours, hierarchy = cv2.findContours(card_map.astype("uint8"), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
-        cmax = max(contours, key = cv2.contourArea)
-        hull=cv2.convexHull(cmax)
-        for i in range(10):
-            epsilon = (i+1)*0.01*cv2.arcLength(hull,True)
-            approx = cv2.approxPolyDP(hull,epsilon,True)
-            if approx.shape[-1]==4:
-                break
-            
-        approx=np.reshape(approx,(approx.shape[0],approx.shape[-1]))
-        approx=approx.astype("float32")
-        form=np.array([approx[0],approx[3],approx[2],approx[1]])
-        # warp
-        org=four_point_transform(org,form)
-        return card_type,org
+        # image
+        card_image=convert_object(card_map,img)
+        return card_type,card_image
 

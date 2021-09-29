@@ -53,7 +53,7 @@ def stripPads(arr,
     # y-axis
     arr=arr[:, ~np.all(arr == val, axis=0)]
     return arr
-
+#---------------------------------------------------------------
 def locateData(img,val):
     '''
         locates img data based on specific value threshold
@@ -61,7 +61,7 @@ def locateData(img,val):
     idx=np.where(img>val)
     y_min,y_max,x_min,x_max = np.min(idx[0]), np.max(idx[0]), np.min(idx[1]), np.max(idx[1])
     return y_min,y_max,x_min,x_max
-
+#---------------------------------------------------------------
 def remove_shadows(img):
     '''
     removes shadows and thresholds
@@ -86,7 +86,7 @@ def remove_shadows(img):
     # merge rgb
     img = cv2.merge(result_norm_planes)
     return img
-
+#---------------------------------------------------------------
 def threshold_image(img,blur):
     '''
         threshold an image
@@ -99,7 +99,7 @@ def threshold_image(img,blur):
         img = cv2.GaussianBlur(img,(5,5),0)
     _,img = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     return img
-
+#---------------------------------------------------------------
 def cleanImage(img,remove_shadow=True):
     '''
         cleans an image 
@@ -112,7 +112,7 @@ def cleanImage(img,remove_shadow=True):
     img=cv2.merge((img,img,img))
     img= cv2.fastNlMeansDenoisingColored(img,None,10,10,7,21)
     return img
-
+#---------------------------------------------------------------
 def enhanceImage(img,factor=10):
     '''
         enhances an image based on contrast
@@ -156,8 +156,13 @@ def padDetectionImage(img):
         cfg=None
     return img.astype("uint8"),cfg
    
-
+#---------------------------------------------------------------
+#  segment utils
+#---------------------------------------------------------------
 def order_points(pts):
+    '''
+        order the points a rectangle
+    '''
     rect = np.zeros((4, 2), dtype = "float32")
     s = pts.sum(axis = 1)
     rect[0] = pts[np.argmin(s)]
@@ -166,27 +171,32 @@ def order_points(pts):
     rect[1] = pts[np.argmin(diff)]
     rect[3] = pts[np.argmax(diff)]
     return rect
-
-
+#---------------------------------------------------------------
 def four_point_transform(image, pts):
-	rect = order_points(pts)
-	(tl, tr, br, bl) = rect
-	widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
-	widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
-	maxWidth = max(int(widthA), int(widthB))
-	heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
-	heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
-	maxHeight = max(int(heightA), int(heightB))
-	dst = np.array([
-		[0, 0],
-		[maxWidth - 1, 0],
-		[maxWidth - 1, maxHeight - 1],
-		[0, maxHeight - 1]], dtype = "float32")
-	M = cv2.getPerspectiveTransform(rect, dst)
-	warped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
-	return warped
-
+    '''
+        4 point warping    
+    '''
+    rect = order_points(pts)
+    (tl, tr, br, bl) = rect
+    widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
+    widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
+    maxWidth = max(int(widthA), int(widthB))
+    heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
+    heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
+    maxHeight = max(int(heightA), int(heightB))
+    dst = np.array([
+        [0, 0],
+        [maxWidth - 1, 0],
+        [maxWidth - 1, maxHeight - 1],
+        [0, maxHeight - 1]], dtype = "float32")
+    M = cv2.getPerspectiveTransform(rect, dst)
+    warped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
+    return warped
+#---------------------------------------------------------------
 def findLargestCountours(cntList, cntWidths):
+    '''
+        finds largest contour
+    '''
     newCntList = []
     newCntWidths = []
 
@@ -207,7 +217,7 @@ def findLargestCountours(cntList, cntWidths):
     cntWidths.pop(seccond_largest_cnt_pos)
     return newCntList, newCntWidths
 
-
+#---------------------------------------------------------------
 def convert_object(mask, image):
     gray = mask
     gray = cv2.bilateralFilter(gray, 11, 17, 17)
@@ -229,7 +239,7 @@ def convert_object(mask, image):
             scrWidths.append(W)
 
     if len(scrWidths) != 2:
-        print('ID Card not found.')
+        LOG_INFO('ID Card not found.Retry !!!!',mcolor="red")
         return None
     else:
         screenCntList, scrWidths = findLargestCountours(screenCntList, scrWidths)
@@ -243,7 +253,7 @@ def convert_object(mask, image):
         warped = four_point_transform(image, pts)
         return warped
 #---------------------------------------------------------------
-# modifier/Recognition util utils
+# recognition utils
 #---------------------------------------------------------------
 def padData(img,pad_loc,pad_dim,pad_type,pad_val):
     '''
@@ -289,7 +299,7 @@ def padData(img,pad_loc,pad_dim,pad_type,pad_val):
             # pad
             img =np.concatenate([img,pad],axis=0)
     return img.astype("uint8") 
-
+#---------------------------------------------------------------
 def padWords(img,dim,ptype="central",pvalue=255):
     '''
         corrects an image padding 
@@ -331,7 +341,7 @@ def padWords(img,dim,ptype="central",pvalue=255):
     # error avoid
     img=cv2.resize(img,(img_width,img_height),fx=0,fy=0, interpolation = cv2.INTER_NEAREST)
     return img,mask 
-    
+#---------------------------------------------------------------
 def processCleanWord(img):
     '''
         processes a clean word
@@ -357,7 +367,7 @@ def intersection(boxA, boxB):
     x_min,y_min,x_max,y_max=boxB
     selfArea  = abs((y_max-y_min)*(x_max-x_min))
     return interArea/selfArea
-
+#---------------------------------------------------------------
 def localize_box(box,region_boxes):
     '''
         lambda localization
