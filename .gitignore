@@ -131,3 +131,4 @@ debug*.ipynb
 __local__/*
 models/*
 tests/*
+todo.md 
