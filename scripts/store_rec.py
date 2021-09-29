@@ -45,6 +45,7 @@ def to_tfrecord(df,save_dir,r_num):
             ulabel    =df.iloc[idx,1]
             glabel    =df.iloc[idx,2]
             mask      =df.iloc[idx,3]
+            image_path=image_path.replace("images/","processed/images/")
             #image
             with(open(image_path,'rb')) as fid:
                 image_bytes=fid.read()

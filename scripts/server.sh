@@ -9,8 +9,10 @@ rec_path="${save_path}recog/"
 det_path="${save_path}detect/"
 clean_rec_path="${save_path}recog/clean/"
 noisy_rec_path="${save_path}recog/noisy/"
+clean_rec_proc_path="${save_path}recog/clean/processed/"
+noisy_rec_proc_path="${save_path}recog/noisy/processed/"
 #------------------------------------------card------------------------------------------------------
-#python datagen_card.py $src_path $save_path --num_data 10
+python datagen_card.py $src_path $save_path --num_data 50000
 #----------------------------------------------------------------------------------------------------
 #------------------------------------------det------------------------------------------------------
 python datagen_det.py $card_path $save_path 
@@ -22,11 +24,11 @@ python store_seg.py $seg_path
 #---------------------------------------------------------------------------------------------------
 #------------------------------------------rec------------------------------------------------------
 python datagen_rec.py $src_path $card_path $save_path --add_noise False
-python process_rec.py $clean_rec_path
-python store_rec.py $clean_rec_path
+python process_rec.py $clean_rec_path --max_len 80
+python store_rec.py $clean_rec_proc_path
 #---------------------------------------------------------------------------------------------------
 python datagen_rec.py $src_path $card_path $save_path --add_noise True
-python process_rec.py $noisy_rec_path
-python store_rec.py $noisy_rec_path
+python process_rec.py $noisy_rec_path --max_len 80
+python store_rec.py $noisy_rec_proc_path
 #---------------------------------------------------------------------------------------------------
 echo succeded

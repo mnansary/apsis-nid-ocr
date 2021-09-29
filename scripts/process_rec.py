@@ -5,6 +5,7 @@
 #--------------------
 # imports
 #--------------------
+from genericpath import sameopenfile
 import sys
 sys.path.append('../')
 
@@ -13,7 +14,7 @@ import cv2
 import os
 import json
 import numpy as np
-from dataLib.utils import LOG_INFO, correctPadding,GraphemeParser
+from dataLib.utils import LOG_INFO, correctPadding,GraphemeParser, create_dir
 import math
 import pandas as pd
 from tqdm.auto import tqdm
@@ -46,6 +47,8 @@ def main(args):
     # args
     #-----------------
     recog_dir=args.recog_dir
+    save_dir=create_dir(recog_dir,"processed")
+    img_save_dir=create_dir(save_dir,"images")
     img_height=int(args.img_height)
     img_width=int(args.img_width)
     factor=int(args.factor)
@@ -85,7 +88,7 @@ def main(args):
     df["label_unicode"]=df.encoded_unicodes.progress_apply(lambda x:pad_label(x,max_len,pad_value,start_end_value))
 
     LOG_INFO("Graphemes")
-    start_end_value=len(gvocab)
+    start_end_value=len(gvocab)+1
     pad_value =start_end_value+1
     LOG_INFO(f"start-end:{start_end_value}")
     LOG_INFO(f"pad:{pad_value}")
@@ -97,9 +100,10 @@ def main(args):
         try:
             # image saving
             img_path=df.iloc[idx,2]
+            fname=os.path.basename(img_path)
             img=cv2.imread(img_path)
             img,mask=correctPadding(img,(img_height,img_width),ptype="left",pvalue=255)
-            cv2.imwrite(img_path,img)
+            cv2.imwrite(os.path.join(img_save_dir,fname),img)
             # mask
             mask=math.ceil((mask/img_width)*(img_width//factor))
             imask=np.zeros((img_height//factor,img_width//factor))
@@ -113,7 +117,7 @@ def main(args):
     df["mask"]=masks
     df.dropna(inplace=True)
     df=df[["img_path","label_unicode","label_grapheme","mask","text"]]
-    df.to_csv(data_csv,index=False)
+    df.to_csv(os.path.join(save_dir,"data.csv"),index=False)
 
 if __name__=="__main__":
     '''
