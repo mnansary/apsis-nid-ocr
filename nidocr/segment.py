@@ -50,6 +50,7 @@ class Extractor(object):
             img=cv2.imread(img)
             img=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
         # dims
+        org=np.copy(img)
         h,w,d=img.shape
         # process
         img=cv2.resize(img,(self.img_dim[1],self.img_dim[0]))
@@ -61,6 +62,6 @@ class Extractor(object):
         card_map =pred[1][0]
         card_map=cv2.resize(card_map,(w,h))
         # image
-        card_image=convert_object(card_map,img)
+        card_image=convert_object(card_map,org)
         return card_type,card_image
 
