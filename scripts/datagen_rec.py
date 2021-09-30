@@ -26,13 +26,7 @@ def main(args):
     card_dir=args.card_dir
     src_dir =args.src_dir
     save_dir=args.save_dir
-    use_noise=args.add_noise
-    save_dir=create_dir(save_dir,"recog")
-    if use_noise:
-        save_dir=create_dir(save_dir,"noisy")
-    else:
-        save_dir=create_dir(save_dir,"clean")
-        
+    save_dir=create_dir(save_dir,"recog")    
     img_dir =create_dir(save_dir,"images")
     data_csv =os.path.join(save_dir,"data.csv")
     
@@ -65,7 +59,8 @@ def main(args):
                 card_text=src.card.smart.front.text
             # image    
             img=cv2.imread(img_path)
-            if use_noise:
+            # add noise 33% of the time
+            if random.choice([0,0,1])==1:
                 img=mod.noise(img)
             # mask
             mask=cv2.imread(mask_path,0)
@@ -86,7 +81,7 @@ def main(args):
                     filename=f"{img_count}.png"
                     cv2.imwrite(os.path.join(img_dir,filename),word_img)
                     img_count+=1
-                    dicts.append({"filename":filename,"text":text_word.lower()})
+                    dicts.append({"filename":filename,"text":text_word.lower(),"source":k})
         except Exception as e:
             pass
     df=pd.DataFrame(dicts)
@@ -100,6 +95,5 @@ if __name__=="__main__":
     parser.add_argument("src_dir", help="Path to source data")
     parser.add_argument("card_dir", help="Path to cards data")
     parser.add_argument("save_dir", help="Path to save the processed data")
-    parser.add_argument("--add_noise",type=str2bool,required=False,default=True,help ="using noise to create word data : default=True")    
     args = parser.parse_args()
     main(args)

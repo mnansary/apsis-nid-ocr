@@ -5,7 +5,6 @@
 #--------------------
 # imports
 #--------------------
-from genericpath import sameopenfile
 import sys
 sys.path.append('../')
 
@@ -46,16 +45,20 @@ def main(args):
     #-----------------
     # args
     #-----------------
-    recog_dir=args.recog_dir
-    save_dir=create_dir(recog_dir,"processed")
-    img_save_dir=create_dir(save_dir,"images")
-    img_height=int(args.img_height)
-    img_width=int(args.img_width)
-    factor=int(args.factor)
-    max_len=int(args.max_len)
+    recog_dir   =   args.recog_dir
+    save_dir    =   args.save_dir
+    img_height  =   int(args.img_height)
+    img_width   =   int(args.img_width)
+    factor      =   int(args.factor)
+    max_len     =   int(args.max_len)
     #--- resource----------------
+    save_dir    =   create_dir(save_dir,"processed")
+    img_save_dir=   create_dir(save_dir,"images")
+    
     img_dir =os.path.join(recog_dir,"images")
     data_csv =os.path.join(recog_dir,"data.csv")
+    
+    # dataframe
     df=pd.read_csv(data_csv)
     df.dropna(inplace=True)
     
@@ -93,13 +96,12 @@ def main(args):
     LOG_INFO(f"start-end:{start_end_value}")
     LOG_INFO(f"pad:{pad_value}")
     df["label_grapheme"]=df.encoded_graphemes.progress_apply(lambda x:pad_label(x,max_len,pad_value,start_end_value))
-
     masks=[]
     #--- resize and pad images and create masks
     for idx in tqdm(range(len(df))):
         try:
             # image saving
-            img_path=df.iloc[idx,2]
+            img_path=df.iloc[idx,3]
             fname=os.path.basename(img_path)
             img=cv2.imread(img_path)
             img,mask=correctPadding(img,(img_height,img_width),ptype="left",pvalue=255)
@@ -114,9 +116,12 @@ def main(args):
         except Exception as e:
             pass
             masks.append(None)
+    
     df["mask"]=masks
     df.dropna(inplace=True)
-    df=df[["img_path","label_unicode","label_grapheme","mask","text"]]
+    
+    df=df[["img_path","label_unicode","label_grapheme","mask","text","source"]]
+    df["img_path"]=df["img_path"].progress_apply(lambda x: x.replace("recog","processed"))
     df.to_csv(os.path.join(save_dir,"data.csv"),index=False)
 
 if __name__=="__main__":
@@ -125,9 +130,10 @@ if __name__=="__main__":
     '''
     parser = argparse.ArgumentParser("Synthetic NID/Smartcard Recog Data Creation Script")
     parser.add_argument("recog_dir", help="Path to recog data")
+    parser.add_argument("save_dir", help="Path to save processed data")
     parser.add_argument("--img_height",required=False,default=64,help="height dimension to save images")
     parser.add_argument("--img_width",required=False,default=512,help ="width dimension to save images")
     parser.add_argument("--factor",required=False,default=32,help ="mask factor")
-    parser.add_argument("--max_len",required=False,default=100,help ="max length to pad")
+    parser.add_argument("--max_len",required=False,default=80,help ="max length to pad")
     args = parser.parse_args()
     main(args)

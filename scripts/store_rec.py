@@ -27,16 +27,17 @@ def _int64_feature(value):
     """Returns an int64_list from a bool / enum / int / uint."""
     return tf.train.Feature(int64_list=tf.train.Int64List(value=value))
 
-def to_tfrecord(df,save_dir,r_num):
+def to_tfrecord(df,save_dir,r_num,iden):
     '''	            
       Creates tfrecords from Provided Image Paths	        
       args:	        df
         df              :   portion of the whole dataframe to be saved	       
         save_dir        :   location to save the tfrecords	           
         r_num           :   record number	
+        iden            :   tfrec identifier 
     '''
     # record name
-    tfrecord_name='{}.tfrecord'.format(r_num)
+    tfrecord_name=f'{iden}_{r_num}.tfrecord'
     # path
     tfrecord_path=os.path.join(save_dir,tfrecord_name)
     with tf.io.TFRecordWriter(tfrecord_path) as writer:    
@@ -45,7 +46,6 @@ def to_tfrecord(df,save_dir,r_num):
             ulabel    =df.iloc[idx,1]
             glabel    =df.iloc[idx,2]
             mask      =df.iloc[idx,3]
-            image_path=image_path.replace("images/","processed/images/")
             #image
             with(open(image_path,'rb')) as fid:
                 image_bytes=fid.read()
@@ -63,12 +63,13 @@ def to_tfrecord(df,save_dir,r_num):
             writer.write(serialized)
 
 
-def genTFRecords(df,save_dir):
+def genTFRecords(df,save_dir,iden):
     '''	        
         tf record wrapper
         args:	        
             df        :   dataframe that contains file and coord data	        
-            save_dir  :   location to save the tfrecords	    
+            save_dir  :   location to save the tfrecords	 
+            iden      :   tfrec identifier   
     '''
     for i in tqdm(range(0,len(df),DATA_NUM)):
         # paths
@@ -76,26 +77,28 @@ def genTFRecords(df,save_dir):
         # record num
         r_num=i // DATA_NUM
         # create tfrecord
-        to_tfrecord(_df,save_dir,r_num)    
+        to_tfrecord(_df,save_dir,r_num,iden)    
 
 
 def main(args):
     #-----------------
-    recog_dir=args.recog_dir
-    save_dir=create_dir(recog_dir,"tfrecords")
-    data_csv=os.path.join(recog_dir,"data.csv")
+    proc_dir=args.proc_dir
+    save_dir=create_dir(proc_dir,"tfrecords")
+    data_csv=os.path.join(proc_dir,"data.csv")
     df=pd.read_csv(data_csv)
     df.label_unicode=df.label_unicode.progress_apply(lambda x: literal_eval(x))
     df.label_grapheme=df.label_grapheme.progress_apply(lambda x: literal_eval(x))
     df["mask"]=df["mask"].progress_apply(lambda x: literal_eval(x))
     
-    genTFRecords(df,save_dir)
+    for source in df.source.unique():
+        sdf=df.loc[df.source==source]
+        genTFRecords(sdf,save_dir,source)
 
 if __name__=="__main__":
     '''
         parsing and execution
     '''
     parser = argparse.ArgumentParser("Synthetic NID/Smartcard Recognition TFRecords Data Creation Script")
-    parser.add_argument("recog_dir", help="Path to recog folder data")
+    parser.add_argument("proc_dir", help="Path to processed folder data")
     args = parser.parse_args()
     main(args)
