@@ -1,6 +1,6 @@
 #!/bin/sh
-#save_path="/home/apsisdev/ansary/DATASETS/APSIS/NID/"
-save_path="/media/ansary/DriveData/Work/APSIS/datasets/NID/"
+save_path="/home/apsisdev/ansary/DATASETS/APSIS/NID/"
+#save_path="/media/ansary/DriveData/Work/APSIS/datasets/NID/"
 #-----------------------------------------------------------------------------------------------
 src_path="${save_path}source/"
 card_path="${save_path}cards/"
@@ -9,7 +9,7 @@ rec_path="${save_path}recog/"
 det_path="${save_path}detect/"
 proc_path="${save_path}processed/"
 #------------------------------------------card------------------------------------------------------
-python datagen_card.py $src_path $save_path --num_data 10
+python datagen_card.py $src_path $save_path --num_data 20000
 #----------------------------------------------------------------------------------------------------
 #------------------------------------------rec------------------------------------------------------
 python datagen_rec.py $src_path $card_path $save_path 
