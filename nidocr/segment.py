@@ -60,6 +60,7 @@ class Extractor(object):
         pred=self.model.predict(data)
         card_type=self.labels[np.argmax(pred[0][0])]
         card_map =pred[1][0]
+        card_map=card_map.astype("uint8")
         card_map=cv2.resize(card_map,(w,h))
         # image
         card_image=convert_object(card_map,org)

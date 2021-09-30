@@ -181,6 +181,7 @@ class OCR(object):
         # face and sign
         img=cv2.resize(img,(card.width,card.height))
         img=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+        org=np.copy(img)
         x1,y1,x2,y2=src.face
         face=img[y1:y2,x1:x2]
         x1,y1,x2,y2=src.sign
@@ -198,13 +199,13 @@ class OCR(object):
             for k,v in box_dict.items():
                 if k!="ID No.":
                     boxes+=v
-            texts=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=10,word_process_func=word_process_func)
+            texts=self.rec.recognize(org,boxes,batch_size=batch_size,infer_len=10,word_process_func=word_process_func)
             #nid
             boxes=box_dict["ID No."]
-            texts+=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=20,word_process_func=word_process_func)
+            texts+=self.rec.recognize(org,boxes,batch_size=batch_size,infer_len=20,word_process_func=word_process_func)
         else:
             boxes=df.box.tolist()
-            texts=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=10,word_process_func=word_process_func)
+            texts=self.rec.recognize(org,boxes,batch_size=batch_size,infer_len=10,word_process_func=word_process_func)
         
         df["text"]=texts
         return face,sign,df                  
