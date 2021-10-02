@@ -97,8 +97,8 @@ class Data(object):
                     template    =   os.path.join(self.res_dir,"nid_template_back.png")
 
         class config:
-            max_rotation  = 5
-            max_warp_perc = 10 
+            max_rotation  = 2
+            max_warp_perc = 4 
             max_pad_perc  = 20
             noise_weights = [0.7,0.3]
             blur_weights  = [0.5,0.5]

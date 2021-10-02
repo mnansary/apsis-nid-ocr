@@ -46,6 +46,12 @@ def create_dir(base,ext):
         os.mkdir(_path)
     return _path
 #---------------------------------------------------------------
+def randColor():
+    '''
+        generates random color
+    '''
+    return (random.randint(0,255),random.randint(0,255),random.randint(0,255))
+#---------------------------------------------------------------
 def stripPads(arr,
               val):
     '''
@@ -101,14 +107,14 @@ def threshold_image(img,blur=True):
     return img
 
 
-def cleanImage(img,remove_shadow=True):
+def cleanImage(img,remove_shadow=True,blur=True):
     '''
         cleans an image 
     '''
     # text binary
     if remove_shadow:
         img=remove_shadows(img)
-    img=threshold_image(img,blur=True)
+    img=threshold_image(img,blur=blur)
     # remove noise
     img=cv2.merge((img,img,img))
     img= cv2.fastNlMeansDenoisingColored(img,None,10,10,7,21)
@@ -309,7 +315,7 @@ class Modifier:
         self.ops             =   [  self.__blur,
                                     self.__gaussBlur,
                                     self.__medianBlur,
-                                    #self.__biFilter,
+                                    self.__biFilter,
                                     self.__gaussNoise,
                                     self.__addBrightness]
 

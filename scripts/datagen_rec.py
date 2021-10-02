@@ -31,6 +31,7 @@ def main(args):
     data_csv =os.path.join(save_dir,"data.csv")
     
     src=Data(src_dir)
+    backgen=src.backgroundGenerator()
     LOG_INFO(save_dir)
     # data division
     card_img_dir =os.path.join(card_dir,"images")
@@ -57,11 +58,6 @@ def main(args):
                 card_text=src.card.nid.front.text
             else:
                 card_text=src.card.smart.front.text
-            # image    
-            img=cv2.imread(img_path)
-            # add noise 33% of the time
-            if random.choice([0,0,1])==1:
-                img=mod.noise(img)
             # mask
             mask=cv2.imread(mask_path,0)
             # crop text and image data
@@ -77,7 +73,11 @@ def main(args):
                     # word img crop
                     idx=np.where(mask_word==255)
                     y_min,y_max,x_min,x_max = np.min(idx[0]), np.max(idx[0]), np.min(idx[1]), np.max(idx[1])
-                    word_img=img[y_min:y_max,x_min:x_max]    
+                    word_mask=mask[y_min:y_max,x_min:x_max]
+                    word_img=next(backgen)
+                    h,w=word_mask.shape
+                    word_img=cv2.resize(word_img,(w,h))
+                    word_img[word_mask>0]=randColor()
                     filename=f"{img_count}.png"
                     cv2.imwrite(os.path.join(img_dir,filename),word_img)
                     img_count+=1

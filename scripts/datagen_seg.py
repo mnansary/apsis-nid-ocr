@@ -74,7 +74,7 @@ def main(args):
                     coord.append([int(x),int(y)])
 
                 img=cv2.resize(img,(data_dim,data_dim))
-                mask=cv2.resize(mask,(data_dim,data_dim),interpolation=cv2.INTER_NEAREST)
+                mask=cv2.resize(mask,(data_dim,data_dim))
                 # save
                 cv2.imwrite(os.path.join(img_dir,f"{card_type}_{idx}.png"),img)
                 cv2.imwrite(os.path.join(mask_dir,f"{card_type}_{idx}.png"),mask)
