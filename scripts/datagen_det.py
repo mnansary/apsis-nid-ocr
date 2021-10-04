@@ -35,7 +35,7 @@ def main(args):
     num_data    =   int(args.num_data)
     data_dim    =   int(args.data_dim)
     
-
+    aug=Modifier()
     heatmap=gaussian_heatmap()
     # data division
     df=pd.read_csv(data_csv)
@@ -71,6 +71,7 @@ def main(args):
                     labels+=text_dict[col][didx]
                 heat,link=det_data(mask,labels,heatmap)
                 # save
+                image=aug.noise(image)
                 image,_=padDetectionImage(image)
                 heat   =pad_map(heat)
                 link   =pad_map(link)

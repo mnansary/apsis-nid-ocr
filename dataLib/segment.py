@@ -173,7 +173,6 @@ def augment_img_base(img_path,config):
         if random.choice([0,1,1,1])==1:
             flip_op=random.choice([-90,180,90])                  
             img,M=rotate_image(img,flip_op)
-            mask,_=rotate_image(mask,flip_op)
             curr_coord=get_image_coords(curr_coord,M)
             
    
@@ -224,8 +223,9 @@ def render_data(backgen,img_path,config):
     aug=Modifier()
     # base augment
     img,mask,coord=augment_img_base(img_path,config)    
-    # pad
-    img,mask,coord=pad_image_mask(img,mask,coord,config)
+    if random.choice([0,0,0,1])==0:
+        # pad
+        img,mask,coord=pad_image_mask(img,mask,coord,config)
     # background
     if random.choice([0,0,0,1])==0:
         back=next(backgen)

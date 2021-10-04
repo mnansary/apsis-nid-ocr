@@ -276,7 +276,7 @@ def padData(img,pad_loc,pad_dim,pad_type,pad_val):
             img =np.concatenate([img,pad],axis=0)
     return img.astype("uint8") 
 #---------------------------------------------------------------
-def padWords(img,dim,ptype="central",pvalue=255):
+def padWords(img,dim,ptype="central",pvalue=255,scope_pad=50):
     '''
         corrects an image padding 
         args:
@@ -312,7 +312,9 @@ def padWords(img,dim,ptype="central",pvalue=255):
                     pad_dim=img_width,
                     pad_type=ptype,
                     pad_val=pvalue)
-        mask=w
+        mask=w+scope_pad
+        if mask>img_width:
+            mask=img_width
     
     # error avoid
     img=cv2.resize(img,(img_width,img_height),fx=0,fy=0, interpolation = cv2.INTER_NEAREST)
