@@ -15,6 +15,8 @@ from tqdm import tqdm
 from PIL import Image, ImageEnhance
 import argparse
 #---------------------------------------------------------------
+# common utils
+#---------------------------------------------------------------
 def str2bool(v):
     if isinstance(v, bool):
         return v
@@ -51,6 +53,8 @@ def randColor():
         generates random color
     '''
     return (random.randint(0,255),random.randint(0,255),random.randint(0,255))
+#---------------------------------------------------------------
+# image utils
 #---------------------------------------------------------------
 def stripPads(arr,
               val):
@@ -105,8 +109,7 @@ def threshold_image(img,blur=True):
         img = cv2.GaussianBlur(img,(5,5),0)
     _,img = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     return img
-
-
+#---------------------------------------------------------------
 def cleanImage(img,remove_shadow=True,blur=True):
     '''
         cleans an image 
@@ -119,7 +122,7 @@ def cleanImage(img,remove_shadow=True,blur=True):
     img=cv2.merge((img,img,img))
     img= cv2.fastNlMeansDenoisingColored(img,None,10,10,7,21)
     return img
-
+#---------------------------------------------------------------
 def enhanceImage(img,factor=10):
     '''
         enhances an image based on contrast
@@ -129,8 +132,7 @@ def enhanceImage(img,factor=10):
     img= con_enhancer.enhance(factor)
     img=np.array(img)
     return img 
-
-
+#---------------------------------------------------------------
 def padDetectionImage(img):
     cfg={}
         

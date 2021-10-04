@@ -193,65 +193,41 @@ def four_point_transform(image, pts):
     warped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
     return warped
 #---------------------------------------------------------------
-def findLargestCountours(cntList, cntWidths):
-    '''
-        finds largest contour
-    '''
-    newCntList = []
-    newCntWidths = []
+def four_cords_crop_img(img):
+    '''        
+    @function author:                 
+            Algo:                    
+                - threshold                    
+                - find max-area contour                    
+                - convex hull of max-area contour                    
+                - simplification of 4 point via arc-len        
+            args:            
+                input         = img < Image >                        
+            output:               
+                four_cords = [x1,y1, x2,y2, x3,y3, x4,y4]  < 1D list >               
+    '''    
+    # threshold image    
+    ret,thresh = cv2.threshold(img,0,255,0)
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    if len(contours) != 0:
+        # find the biggest countour (c) by the area        
+        c = max(contours, key = cv2.contourArea)
+    # convexHull of max-area contour    
+    hull = cv2.convexHull(c)
+    # simplify contours
+    for i in range(15):
+        epsilon = (i+1)*0.01*cv2.arcLength(hull,True)
+        approx = cv2.approxPolyDP(hull,epsilon,True)
+        if approx.shape[-1]==4:
+            break
 
-    first_largest_cnt_pos = cntWidths.index(max(cntWidths))
-
-    newCntList.append(cntList[first_largest_cnt_pos])
-    newCntWidths.append(cntWidths[first_largest_cnt_pos])
-
-    cntList.pop(first_largest_cnt_pos)
-    cntWidths.pop(first_largest_cnt_pos)
-
-    seccond_largest_cnt_pos = cntWidths.index(max(cntWidths))
-
-    newCntList.append(cntList[seccond_largest_cnt_pos])
-    newCntWidths.append(cntWidths[seccond_largest_cnt_pos])
-
-    cntList.pop(seccond_largest_cnt_pos)
-    cntWidths.pop(seccond_largest_cnt_pos)
-    return newCntList, newCntWidths
-
-#---------------------------------------------------------------
-def convert_object(mask, image):
-    gray = mask
-    gray = cv2.bilateralFilter(gray, 11, 17, 17)
-    gray = cv2.medianBlur(gray, 5)
-    edged = cv2.Canny(gray, 30, 400)
-    countours, _ = cv2.findContours(edged, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
-
-    cnts = sorted(countours, key=cv2.contourArea, reverse=True)
-    screenCntList = []
-    scrWidths = []
-    for cnt in cnts:
-        peri = cv2.arcLength(cnt, True)
-        approx = cv2.approxPolyDP(cnt, 0.02 * peri, True)
-        screenCnt = approx
-
-        if (len(screenCnt) == 4):
-            (X, Y, W, H) = cv2.boundingRect(cnt)
-            screenCntList.append(screenCnt)
-            scrWidths.append(W)
-
-    if len(scrWidths) != 2:
-        LOG_INFO('ID Card not found.Retry !!!!',mcolor="red")
-        return None
-    else:
-        screenCntList, scrWidths = findLargestCountours(screenCntList, scrWidths)
-
-        if not len(screenCntList) >= 2:  # there is no rectangle found
-            return None
-        elif scrWidths[0] != scrWidths[1]:  # mismatch in rect
-            return None
-
-        pts = screenCntList[0].reshape(4, 2)
-        warped = four_point_transform(image, pts)
-        return warped
+    #epsilon = 0.1*cv2.arcLength(c,True)
+    #approx = cv2.approxPolyDP(c,epsilon,True)
+        
+    approx=np.reshape(approx,(approx.shape[0],approx.shape[-1]))
+    approx=approx.astype("float32")
+    pts=np.array([approx[0],approx[3],approx[2],approx[1]])
+    return pts
 #---------------------------------------------------------------
 # recognition utils
 #---------------------------------------------------------------

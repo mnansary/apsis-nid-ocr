@@ -13,6 +13,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from .detector import CRAFT
 from .recogonizer import RobustScanner
+from .segment import Extractor
 from deepface import DeepFace
 from .data import card
 #-------------------------
@@ -22,6 +23,7 @@ from .data import card
 class OCR(object):
     def __init__(self,
                 model_dir,
+                use_extractor=True,
                 use_detector=True,
                 use_recognizer=True,
                 use_facematcher=True):
@@ -45,6 +47,18 @@ class OCR(object):
         for _,v in card.nid.front.box_dict.items():
             dummy_boxes.append(v)
         
+        if use_extractor:
+            try:
+                ext_weights=os.path.join(model_dir,"segment.h5")
+                self.extractor=Extractor(ext_weights)
+                LOG_INFO("Extractor Loaded")    
+                card_type,card_image=self.extractor.process(dummy_path)
+                if card_type=="nid":
+                    LOG_INFO("Extractor Initialized")
+            except Exception as e:
+                LOG_INFO(f"EXECUTION EXCEPTION: {e}",mcolor="red")
+            
+
         # detector weight loading and initialization
         if use_detector:
             try:
@@ -108,7 +122,7 @@ class OCR(object):
         if return_dict:
             return {"match":match,"similiarity":similiarity_value}
 
-    def detect_boxes(self,img,det_thresh=0.4,text_thresh=0.7,shift_x_max=5):
+    def detect_boxes(self,img,det_thresh=0.4,text_thresh=0.7,shift_x_max=0):
         '''
             detection wrapper
             args:
@@ -161,7 +175,7 @@ class OCR(object):
 
     
 
-    def extract(self,img,card_type,batch_size=32,shift_x_max=5,word_process_func=None):
+    def extract(self,img,batch_size=32,shift_x_max=5,word_process_func=None):
         '''
             predict based on datatype
             args:
@@ -171,6 +185,8 @@ class OCR(object):
                 word_process_func   :   function to process the word images
                 shift_x_max         :   shifting x values
         '''
+        card_type,img=self.extractor.process(img)
+        
         if card_type=="nid": 
             src=card.nid.front
             two_step_recog=True
@@ -180,8 +196,6 @@ class OCR(object):
         
         # face and sign
         img=cv2.resize(img,(card.width,card.height))
-        img=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
-        org=np.copy(img)
         x1,y1,x2,y2=src.face
         face=img[y1:y2,x1:x2]
         x1,y1,x2,y2=src.sign
@@ -189,8 +203,6 @@ class OCR(object):
         
         
         # boxes
-        img=cleanImage(img)
-        img=enhanceImage(img)
         text_boxes=self.detect_boxes(img,shift_x_max=shift_x_max)
         box_dict,df=self.process_boxes(text_boxes,src.box_dict)
         # recognition
@@ -199,13 +211,13 @@ class OCR(object):
             for k,v in box_dict.items():
                 if k!="ID No.":
                     boxes+=v
-            texts=self.rec.recognize(org,boxes,batch_size=batch_size,infer_len=10,word_process_func=word_process_func)
+            texts=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=10,word_process_func=word_process_func)
             #nid
             boxes=box_dict["ID No."]
-            texts+=self.rec.recognize(org,boxes,batch_size=batch_size,infer_len=20,word_process_func=word_process_func)
+            texts+=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=20,word_process_func=word_process_func)
         else:
             boxes=df.box.tolist()
-            texts=self.rec.recognize(org,boxes,batch_size=batch_size,infer_len=10,word_process_func=word_process_func)
+            texts=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=10,word_process_func=word_process_func)
         
         df["text"]=texts
         return face,sign,df                  
