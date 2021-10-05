@@ -16,6 +16,7 @@ from .recogonizer import RobustScanner
 from .segment import Extractor
 from deepface import DeepFace
 from .data import card
+import base64
 #-------------------------
 # class
 #------------------------
@@ -200,11 +201,11 @@ class OCR(object):
         face=img[y1:y2,x1:x2]
         x1,y1,x2,y2=src.sign
         sign=img[y1:y2,x1:x2]
-        
-        
+        img= cv2.fastNlMeansDenoisingColored(img,None,10,10,7,21)
         # boxes
         text_boxes=self.detect_boxes(img,shift_x_max=shift_x_max)
         box_dict,df=self.process_boxes(text_boxes,src.box_dict)
+
         # recognition
         if two_step_recog:
             boxes=[]
@@ -219,5 +220,13 @@ class OCR(object):
             boxes=df.box.tolist()
             texts=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=10,word_process_func=word_process_func)
         
+        response={}
+        response["card_type"]=card_type
         df["text"]=texts
-        return face,sign,df                  
+        for field in df.field.unique():
+            tdf=df.loc[df.field==field]
+            response[field]=" ".join(tdf.text.tolist())
+        #response["image"]=base64.b64encode(face)
+        #response["sign"]=base64.b64encode(sign)
+        
+        return response                  

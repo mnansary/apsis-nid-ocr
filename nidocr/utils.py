@@ -100,14 +100,14 @@ def threshold_image(img,blur):
     _,img = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     return img
 #---------------------------------------------------------------
-def cleanImage(img,remove_shadow=True):
+def cleanImage(img,remove_shadow=True,blur=True):
     '''
         cleans an image 
     '''
     # text binary
     if remove_shadow:
         img=remove_shadows(img)
-    img=threshold_image(img,blur=True)
+    img=threshold_image(img,blur=blur)
     # remove noise
     img=cv2.merge((img,img,img))
     img= cv2.fastNlMeansDenoisingColored(img,None,10,10,7,21)

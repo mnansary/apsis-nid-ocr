@@ -21,8 +21,8 @@ python datagen_seg.py $src_path $card_path $save_path
 python store_seg.py $seg_path
 #---------------------------------------------------------------------------------------------------
 #------------------------------------------det------------------------------------------------------
-python datagen_det.py $card_path $save_path 
-python store_det.py $det_path
+#python datagen_det.py $card_path $save_path 
+#python store_det.py $det_path
 #---------------------------------------------------------------------------------------------------
 
 echo succeded
