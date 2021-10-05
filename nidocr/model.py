@@ -232,8 +232,18 @@ class OCR(object):
         for field in df.field.unique():
             tdf=df.loc[df.field==field]
             response[field]=" ".join(tdf.text.tolist())
-
-
+        print(response.keys())
+        # correct numbers
+        if "o" in response["ID No."]:
+            response["ID No."]=response["ID No."].replace("o","0")
+        if "s" in response["ID No."]:
+            response["ID No."]=response["ID No."].replace("s","5")
+        if "z" in response["ID No."]:
+            response["ID No."]=response["ID No."].replace("z","2")
+        if "i" in response["ID No."]:
+            response["ID No."]=response["ID No."].replace("i","1")
+        if "l" in response["ID No."]:
+            response["ID No."]=response["ID No."].replace("l","1")
 
         response["image"]=img2base64(face)
         response["sign"]=img2base64(sign)
