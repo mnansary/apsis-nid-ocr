@@ -9,20 +9,21 @@ rec_path="${save_path}recog/"
 det_path="${save_path}detect/"
 proc_path="${save_path}processed/"
 #------------------------------------------card------------------------------------------------------
-#python datagen_card.py $src_path $save_path --num_data 20000
+python datagen_card.py $src_path $save_path --num_data 50000
 #----------------------------------------------------------------------------------------------------
-#------------------------------------------rec------------------------------------------------------
-#python datagen_rec.py $src_path $card_path $save_path 
-#python process_rec.py $rec_path $save_path
-#python store_rec.py $proc_path
-#---------------------------------------------------------------------------------------------------
 #------------------------------------------seg------------------------------------------------------
 python datagen_seg.py $src_path $card_path $save_path 
 python store_seg.py $seg_path
 #---------------------------------------------------------------------------------------------------
 #------------------------------------------det------------------------------------------------------
-#python datagen_det.py $card_path $save_path 
-#python store_det.py $det_path
+python datagen_det.py $card_path $save_path 
+python store_det.py $det_path
+#---------------------------------------------------------------------------------------------------
+
+#------------------------------------------rec------------------------------------------------------
+python datagen_rec.py $src_path $card_path $save_path 
+#python process_rec.py $rec_path $save_path
+#python store_rec.py $proc_path
 #---------------------------------------------------------------------------------------------------
 
 echo succeded

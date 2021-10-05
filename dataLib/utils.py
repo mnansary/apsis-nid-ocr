@@ -53,6 +53,9 @@ def randColor():
         generates random color
     '''
     return (random.randint(0,255),random.randint(0,255),random.randint(0,255))
+
+def random_exec(poplutation=[0,1],weights=[0.7,0.3],match=0):
+    return random.choices(population=poplutation,weights=weights,k=1)[0]==match
 #---------------------------------------------------------------
 # image utils
 #---------------------------------------------------------------
@@ -286,8 +289,8 @@ def correctPadding(img,dim,ptype="central",pvalue=255):
 #----------------------------------------
 class Modifier:
     def __init__(self,
-                min_ops=2,
-                max_ops=5,
+                min_ops=1,
+                max_ops=2,
                 blur_kernel_size_max=6,
                 blur_kernel_size_min=3,
                 bi_filter_dim_min=7,
@@ -316,10 +319,10 @@ class Modifier:
         self.num_ops         =random.randint(self.min_ops,self.max_ops)
         self.ops             =   [  self.__blur,
                                     self.__gaussBlur,
-                                    self.__medianBlur,
-                                    self.__biFilter,
-                                    self.__gaussNoise,
-                                    self.__addBrightness]
+                                    self.__medianBlur]
+                                    #self.__biFilter,
+                                    #self.__gaussNoise,
+                                    #self.__addBrightness]
 
 
     def __blur(self,img):
@@ -352,7 +355,7 @@ class Modifier:
         return image.astype("uint8")
     
     def __addBrightness(self,image):    
-        ## Conversion to HLS
+        ## Conversion to HLSmask
         image_HLS = cv2.cvtColor(image,cv2.COLOR_RGB2HLS)     
         image_HLS = np.array(image_HLS, dtype = np.float64)
         ## generates value between 0.5 and 1.5       

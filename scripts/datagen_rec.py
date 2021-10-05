@@ -61,7 +61,11 @@ def main(args):
             # mask
             mask=cv2.imread(mask_path,0)
             # crop text and image data
-           
+                        # image    
+            img=cv2.imread(img_path)
+            if random_exec():
+                img=mod.noise(img)
+            
             for k,v in card_text.items():
                 text=text_dict[k][didx]
                 for word in text:
@@ -73,11 +77,14 @@ def main(args):
                     # word img crop
                     idx=np.where(mask_word==255)
                     y_min,y_max,x_min,x_max = np.min(idx[0]), np.max(idx[0]), np.min(idx[1]), np.max(idx[1])
+                    word_img=img[y_min:y_max,x_min:x_max]
+                    '''
                     word_mask=mask[y_min:y_max,x_min:x_max]
                     word_img=next(backgen)
                     h,w=word_mask.shape
                     word_img=cv2.resize(word_img,(w,h))
                     word_img[word_mask>0]=randColor()
+                    '''
                     filename=f"{img_count}.png"
                     cv2.imwrite(os.path.join(img_dir,filename),word_img)
                     img_count+=1

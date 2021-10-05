@@ -97,12 +97,10 @@ class Data(object):
                     template    =   os.path.join(self.res_dir,"nid_template_back.png")
 
         class config:
-            max_rotation  = 3
-            max_warp_perc = 5 
-            max_pad_perc  = 70
-            noise_weights = [0.7,0.3]
-            blur_weights  = [0.5,0.5]
-            use_scope_rotation=False
+            max_rotation  = 30
+            max_warp_perc = 2 
+            max_pad_perc  = 100
+            use_scope_rotation=True
         class name:
             max_words  = 5
             min_words  = 2
@@ -283,10 +281,11 @@ class Data(object):
 
    
     
-    def createCardFront(self,type,depth_color=50):
+    def createCardFront(self,type):
         '''
             creates an image of card front side data
         '''
+        depth_color=random.randint(0,100)
         template_label={}
         iden=2
         if type=="smart":

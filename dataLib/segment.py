@@ -138,7 +138,8 @@ def augment_img_base(img_path,config):
         card=smart
 
     img=cv2.imread(img_path)
-    img=aug.noise(img)
+    if random_exec():
+        img=aug.noise(img)
     height,width,d=img.shape
     warp_types=[{"p1-p2":width},{"p2-p3":height},{"p3-p4":width},{"p4-p1":height}]
     
@@ -154,26 +155,32 @@ def augment_img_base(img_path,config):
                 [width-1,height-1], 
                 [0,height-1]]
     
-    # warp
-    for i in range(2):
-        if i==0:
-            idxs=[0,2]
-        else:
-            idxs=[1,3]
-        idx=random.choice(idxs)
-        img,mask,curr_coord=get_warped_image(img,mask,curr_coord,config,warp_types[idx])
+    if random_exec():
+        # warp
+        for i in range(2):
+            if i==0:
+                idxs=[0,2]
+            else:
+                if random_exec(weights=[0.5,0.5]):
+                    idxs=[1,3]
+                else:
+                    break
+            idx=random.choice(idxs)
+            img,mask,curr_coord=get_warped_image(img,mask,curr_coord,config,warp_types[idx])
+
+    if random_exec(): 
+        # plane rotation
+        angle=random.randint(-config.max_rotation,config.max_rotation)
+        img,M =rotate_image(img,angle)
+        mask,_=rotate_image(mask,angle)
+        curr_coord=get_image_coords(curr_coord,M)
         
-    # plane rotation
-    angle=random.randint(-config.max_rotation,config.max_rotation)
-    img,M =rotate_image(img,angle)
-    mask,_=rotate_image(mask,angle)
-    curr_coord=get_image_coords(curr_coord,M)
-    
     # scope rotation
     if config.use_scope_rotation:
-        if random.choice([0,1,1,1])==1:
+        if random_exec():
             flip_op=random.choice([-90,180,90])                  
             img,M=rotate_image(img,flip_op)
+            mask,_=rotate_image(mask,flip_op)
             curr_coord=get_image_coords(curr_coord,M)
             
    
@@ -224,16 +231,16 @@ def render_data(backgen,img_path,config):
     
     # base augment
     img,mask,coord=augment_img_base(img_path,config)    
-    if random.choice([0,0,0,1])==0:
+        
+    # background
+    if random_exec():
         # pad
         img,mask,coord=pad_image_mask(img,mask,coord,config)
-    # background
-    if random.choice([0,0,0,1])==0:
         back=next(backgen)
         h,w,d=img.shape
         back=cv2.resize(back,(w,h))
     else:
-        back=(255*np.ones(img.shape)).astype("uint8")
+        back=np.copy(img)
 
     back[mask>0]=img[mask>0]
     
