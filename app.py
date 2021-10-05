@@ -10,7 +10,7 @@ import re
 import numpy as np
 
 # Flask utils
-from flask import Flask, redirect, url_for, request, render_template
+from flask import Flask, redirect, url_for, request, render_template,jsonify
 from werkzeug.utils import secure_filename
 # models
 
@@ -49,12 +49,9 @@ def upload():
         f.save(file_path)
 
         response=ocr.extract(file_path,shift_x_max=0)
-        result=''
-        for k,v in response.items():
-            result+=f"{k}:{v}\n"
-        return result
+        return jsonify(response)
     return None
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True,host="0.0.0.0")

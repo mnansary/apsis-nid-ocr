@@ -3,7 +3,7 @@
 @author:MD.Nazmuddoha Ansary
 """
 from __future__ import print_function
-from PIL.Image import BOX
+
 #-------------------------
 # imports
 #-------------------------
@@ -16,7 +16,7 @@ from .recogonizer import RobustScanner
 from .segment import Extractor
 from deepface import DeepFace
 from .data import card
-import base64
+
 #-------------------------
 # class
 #------------------------
@@ -186,7 +186,13 @@ class OCR(object):
                 word_process_func   :   function to process the word images
                 shift_x_max         :   shifting x values
         '''
-        card_type,img=self.extractor.process(img)
+        # process if path is provided
+        if type(img)==str:
+            img=cv2.imread(img)
+        # dims
+        img=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+        
+        card_type=self.extractor.process(img)
         
         if card_type=="nid": 
             src=card.nid.front
@@ -226,7 +232,12 @@ class OCR(object):
         for field in df.field.unique():
             tdf=df.loc[df.field==field]
             response[field]=" ".join(tdf.text.tolist())
-        #response["image"]=base64.b64encode(face)
-        #response["sign"]=base64.b64encode(sign)
+
+
+
+        response["image"]=img2base64(face)
+        response["sign"]=img2base64(sign)
         
         return response                  
+
+

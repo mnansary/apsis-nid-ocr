@@ -14,6 +14,8 @@ import numpy as np
 from PIL import Image, ImageEnhance
 import matplotlib.pyplot as plt 
 import random
+import base64
+from io import BytesIO
 #---------------------------------------------------------------
 def LOG_INFO(msg,mcolor='blue'):
     '''
@@ -378,3 +380,29 @@ def display_data(info,img,cv_color=True):
     LOG_INFO("------------------------------------------------")
     plt.imshow(img)
     plt.show()
+
+#-----------------------
+# response utils
+#-----------------------
+
+def img2base64(img_detections):
+    '''
+        creates proper json response
+    '''
+    # Convert numpy array To PIL image
+    pil_detection_img = Image.fromarray(img_detections)
+
+    # Convert PIL image to bytes
+    buffered_detection = BytesIO()
+
+    # Save Buffered Bytes
+    pil_detection_img.save(buffered_detection, format='PNG')
+
+    # Base 64 encode bytes data
+    # result : bytes
+    base64_detection = base64.b64encode(buffered_detection.getvalue())
+
+    # Decode this bytes to text
+    # result : string (utf-8)
+    base64_detection = base64_detection.decode('utf-8')
+    return base64_detection
