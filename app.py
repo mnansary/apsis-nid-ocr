@@ -29,10 +29,12 @@ for gpu in gpus:
 from nidocr.model import OCR
 from nidocr.utils import *
 from nidocr.data  import card
-ocr=OCR("models")
+ocr=None
 
 @app.route('/', methods=['GET'])
 def index():
+    global ocr
+    ocr=OCR("models")
     # Main page
     return render_template('index.html')
 
