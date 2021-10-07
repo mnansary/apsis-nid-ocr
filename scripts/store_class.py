@@ -42,23 +42,26 @@ def to_tfrecord(df,save_dir,r_num):
     with tf.io.TFRecordWriter(tfrecord_path) as writer:    
         for idx in range(len(df)):
             image_path=df.iloc[idx,0]
-            coord     =df.iloc[idx,1]
+            #coord     =df.iloc[idx,1]
             if "nid" in image_path:
                 label     =[1,0]
             else:
                 label     =[0,1]
-            mask_path =str(image_path).replace('images','masks')
             #image
             with(open(image_path,'rb')) as fid:
                 image_bytes=fid.read()
-            # maskdf
+            
+            '''
+            mask_path =str(image_path).replace('images','masks')
+            # mask
             with(open(mask_path,'rb')) as fid:
                 mask_bytes=fid.read()
+            'mask':_bytes_feature(mask_bytes),
+            'bbox':_int64_feature(coord)  
+            '''
             
             data ={ 'image':_bytes_feature(image_bytes),
-                    'mask':_bytes_feature(mask_bytes),
-                    'label':_int64_feature(label),
-                    'bbox':_int64_feature(coord)
+                    'label':_int64_feature(label)
             }
             
             # write
@@ -95,15 +98,15 @@ def flat_coord(x):
 
 def main(args):
     #-----------------
-    seg_dir=args.seg_dir
+    seg_dir=args.class_dir
     save_dir=create_dir(seg_dir,"tfrecords")
     
     img_dir =os.path.join(seg_dir,"images")
     data_csv=os.path.join(seg_dir,"data.csv")
     df=pd.read_csv(data_csv)
-    df.coord=df.coord.progress_apply(lambda x: literal_eval(x))
     df.file =df.file.progress_apply(lambda x: os.path.join(img_dir,x))
-    df.coord=df.coord.progress_apply(lambda x: flat_coord(x))
+    #df.coord=df.coord.progress_apply(lambda x: literal_eval(x))
+    #df.coord=df.coord.progress_apply(lambda x: flat_coord(x))
     df=df.sample(frac=1)
     genTFRecords(df,save_dir)
 
@@ -111,7 +114,7 @@ if __name__=="__main__":
     '''
         parsing and execution
     '''
-    parser = argparse.ArgumentParser("Synthetic NID/Smartcard Segmentation TFRecords Data Creation Script")
-    parser.add_argument("seg_dir", help="Path to segment folder data")
+    parser = argparse.ArgumentParser("Synthetic NID/Smartcard Classification TFRecords Data Creation Script")
+    parser.add_argument("class_dir", help="Path to classification folder data")
     args = parser.parse_args()
     main(args)

@@ -379,69 +379,137 @@ class Modifier:
 #--------------------
 # Parser class
 #--------------------
-class GraphemeParser():
-    def __init__(self):
-        self.vds    =['া', 'ি', 'ী', 'ু', 'ূ', 'ৃ', 'ে', 'ৈ', 'ো', 'ৌ']
-        self.cds    =['ঁ', 'র্', 'র্য', '্য', '্র', '্র্য', 'র্্র']
-        self.roots  =['ং','ঃ','অ','আ','ই','ঈ','উ','ঊ','ঋ','এ','ঐ','ও','ঔ','ক','ক্ক','ক্ট','ক্ত','ক্ল','ক্ষ','ক্ষ্ণ',
-                    'ক্ষ্ম','ক্স','খ','গ','গ্ধ','গ্ন','গ্ব','গ্ম','গ্ল','ঘ','ঘ্ন','ঙ','ঙ্ক','ঙ্ক্ত','ঙ্ক্ষ','ঙ্খ','ঙ্গ','ঙ্ঘ','চ','চ্চ',
-                    'চ্ছ','চ্ছ্ব','ছ','জ','জ্জ','জ্জ্ব','জ্ঞ','জ্ব','ঝ','ঞ','ঞ্চ','ঞ্ছ','ঞ্জ','ট','ট্ট','ঠ','ড','ড্ড','ঢ','ণ',
-                    'ণ্ট','ণ্ঠ','ণ্ড','ণ্ণ','ত','ত্ত','ত্ত্ব','ত্থ','ত্ন','ত্ব','ত্ম','থ','দ','দ্ঘ','দ্দ','দ্ধ','দ্ব','দ্ভ','দ্ম','ধ',
-                    'ধ্ব','ন','ন্জ','ন্ট','ন্ঠ','ন্ড','ন্ত','ন্ত্ব','ন্থ','ন্দ','ন্দ্ব','ন্ধ','ন্ন','ন্ব','ন্ম','ন্স','প','প্ট','প্ত','প্ন',
-                    'প্প','প্ল','প্স','ফ','ফ্ট','ফ্ফ','ফ্ল','ব','ব্জ','ব্দ','ব্ধ','ব্ব','ব্ল','ভ','ভ্ল','ম','ম্ন','ম্প','ম্ব','ম্ভ',
-                    'ম্ম','ম্ল','য','র','ল','ল্ক','ল্গ','ল্ট','ল্ড','ল্প','ল্ব','ল্ম','ল্ল','শ','শ্চ','শ্ন','শ্ব','শ্ম','শ্ল','ষ',
-                    'ষ্ক','ষ্ট','ষ্ঠ','ষ্ণ','ষ্প','ষ্ফ','ষ্ম','স','স্ক','স্ট','স্ত','স্থ','স্ন','স্প','স্ফ','স্ব','স্ম','স্ল','স্স','হ',
-                    'হ্ন','হ্ব','হ্ম','হ্ল','ৎ','ড়','ঢ়','য়']
+class language:
+    bangla={'Vowel Diacritics': ['া', 'ি', 'ী', 'ু', 'ূ', 'ৃ', 'ে', 'ৈ', 'ো', 'ৌ'],
+            'Consonant Diacritics': ['র্', 'র্য', '্য', '্র', '্র্য', 'র্্র'],
+            'Modifiers': ['ং', 'ঃ', 'ঁ'],
+            'Connector': '্'}
 
-        self.lowercase= ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"]
-        self.numbers= ["0","1","2","3","4","5","6","7","8","9","০","১","২","৩","৪","৫","৬","৭","৮","৯"]
-        self.punctuations=[ "!","\"","#","$","%","&","'","(",")","*","+",",","-",".","/",":",";","<","=",
-                            ">","?","@","[","\\","]","^","_","`","{","|","}","~","।"]
-        self.uppercase=["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"]
-
-        self.ignore=self.punctuations+self.numbers+self.lowercase+self.uppercase+[" "]
-
-    def word2grapheme(self,word):
-        graphemes = []
-        grapheme = ''
-        i = 0
-        while i < len(word):
-            if word[i] in self.ignore:
-                graphemes.append(word[i])
-            else:
-                grapheme += (word[i])
-                # print(word[i], grapheme, graphemes)
-                # deciding if the grapheme has ended
-                if word[i] in ['\u200d', '্']:
-                    # these denote the grapheme is contnuing
-                    pass
-                elif word[i] == 'ঁ':  
-                    # 'ঁ' always stays at the end
-                    graphemes.append(grapheme)
-                    grapheme = ''
-                elif word[i] in list(self.roots) + ['়']:
-                    # root is generally followed by the diacritics
-                    # if there are trailing diacritics, don't end it
-                    if i + 1 == len(word):
-                        graphemes.append(grapheme)
-                    elif word[i + 1] not in ['্', '\u200d', 'ঁ', '়'] + list(self.vds):
-                        # if there are no trailing diacritics end it
-                        graphemes.append(grapheme)
-                        grapheme = ''
-
-                elif word[i] in self.vds:
-                    # if the current character is a vowel diacritic
-                    # end it if there's no trailing 'ঁ' + diacritics
-                    # Note: vowel diacritics are always placed after consonants
-                    if i + 1 == len(word):
-                        graphemes.append(grapheme)
-                    elif word[i + 1] not in ['ঁ'] + list(self.vds):
-                        graphemes.append(grapheme)
-                        grapheme = ''
-
-            i = i + 1
-            # Note: df_cd's are constructed by df_root + '্'
-            # so, df_cd is not used in the code
-
-        return graphemes
+class GraphemeParser(object):
+    def __init__(self,language):
+        '''
+            initializes a grapheme parser for a given language
+            args:
+                language  :   a dictionary that contains list of:
+                                1. Vowel Diacritics 
+                                2. Consonant Diacritics
+                                3. Modifiers
+                                and 
+                                4. Connector 
+        '''
+        # error check -- existace
+        assert "Vowel Diacritics" in language.keys(),"Vowel Diacritics Not found"
+        assert "Consonant Diacritics" in language.keys(),"Consonant Diacritics Not found"
+        assert "Modifiers" in language.keys(),"Modifiers Not found"
+        assert "Connector" in language.keys(),"Modifiers Not found"
+        # assignment
+        self.vds=language["Vowel Diacritics"]
+        self.cds=language["Consonant Diacritics"]
+        self.mds=language["Modifiers"]
+        self.connector=language["Connector"]
+        # error check -- type
+        assert type(self.vds)==list,"Vowel Diacritics Is not a list"
+        assert type(self.cds)==list,"Consonant Diacritics Is not a list"
+        assert type(self.mds)==list,"Modifiers Is not a list"
+        assert type(self.connector)==str,"Connector Is not a string"
     
+    def get_root_from_decomp(self,decomp):
+        '''
+            creates grapheme root based list 
+        '''
+        add=0
+        if self.connector in decomp:   
+            c_idxs = [i for i, x in enumerate(decomp) if x == self.connector]
+            # component wise index map    
+            comps=[[cid-1,cid,cid+1] for cid in c_idxs ]
+            # merge multi root
+            r_decomp = []
+            while len(comps)>0:
+                first, *rest = comps
+                first = set(first)
+
+                lf = -1
+                while len(first)>lf:
+                    lf = len(first)
+
+                    rest2 = []
+                    for r in rest:
+                        if len(first.intersection(set(r)))>0:
+                            first |= set(r)
+                        else:
+                            rest2.append(r)     
+                    rest = rest2
+
+                r_decomp.append(sorted(list(first)))
+                comps = rest
+            # add    
+            combs=[]
+            for ridx in r_decomp:
+                comb=''
+                for i in ridx:
+                    comb+=decomp[i]
+                combs.append(comb)
+                for i in ridx:
+                    decomp[i]=comb
+                    
+            # new root based decomp
+            new_decomp=[]
+            for i in range(len(decomp)-1):
+                if decomp[i] not in combs:
+                    new_decomp.append(decomp[i])
+                else:
+                    if decomp[i]!=decomp[i+1]:
+                        new_decomp.append(decomp[i])
+
+            new_decomp.append(decomp[-1])#+add*connector
+            
+            return new_decomp
+        else:
+            return decomp
+
+    def get_graphemes_from_decomp(self,decomp):
+        '''
+        create graphemes from decomp
+        '''
+        graphemes=[]
+        idxs=[]
+        for idx,d in enumerate(decomp):
+            if d not in self.vds+self.mds:
+                idxs.append(idx)
+        idxs.append(len(decomp))
+        for i in range(len(idxs)-1):
+            sub=decomp[idxs[i]:idxs[i+1]]
+            grapheme=''
+            for s in sub:
+                grapheme+=s
+            graphemes.append(grapheme)
+        return graphemes
+
+    def process(self,word,return_graphemes=False):
+        '''
+            processes a word for creating:
+            if return_graphemes=False (default):
+                * components
+            else:                 
+                * grapheme 
+        '''
+        decomp=[ch for ch in word]
+        decomp=self.get_root_from_decomp(decomp)
+        if return_graphemes:
+            return self.get_graphemes_from_decomp(decomp)
+        else:
+            components=[]
+            for comp in decomp:
+                if comp in self.vds+self.mds:
+                    components.append(comp)
+                else:
+                    cd_val=None
+                    for cd in self.cds:
+                        if cd in comp:
+                            comp=comp.replace(cd,"")
+                            cd_val=cd
+                    components.append(comp)
+                    if cd_val is not None:
+                        components.append(cd_val)
+            return components
+                            
