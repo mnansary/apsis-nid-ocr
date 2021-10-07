@@ -35,7 +35,6 @@ class smart:
             7:[465, 510, 750, 530],
             8:[465, 560, 750, 580]
             }
-aug=Modifier()
 #--------------------
 # augment data
 #--------------------
@@ -138,8 +137,6 @@ def augment_img_base(img_path,config):
         card=smart
 
     img=cv2.imread(img_path)
-    if random_exec():
-        img=aug.noise(img)
     height,width,d=img.shape
     warp_types=[{"p1-p2":width},{"p2-p3":height},{"p3-p4":width},{"p4-p1":height}]
     
@@ -241,10 +238,7 @@ def render_data(backgen,img_path,config):
         back=cv2.resize(back,(w,h))
     else:
         back=np.copy(img)
+        coord=np.array(coord)
 
     back[mask>0]=img[mask>0]
-    
-
-    seg=np.copy(back)
-    seg[mask==0]=(0,0,0)
-    return back,seg,coord
+    return back,mask,coord

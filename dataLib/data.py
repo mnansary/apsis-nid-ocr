@@ -295,6 +295,7 @@ class Data(object):
             card_front=self.card.nid.front
             info_color=(0,0,255)
         template =cv2.imread(card_front.template)
+        template =cv2.resize(template,(card_front.width,card_front.height))
         # fill signs and images
         sign=cv2.imread(random.choice(self.source.noise.signs),0)
         face=cv2.imread(random.choice(self.source.noise.faces))
