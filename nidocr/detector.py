@@ -27,9 +27,11 @@ class BaseDetector(object):
         self.img_dim=img_dim
         self.data_channel=data_channel
         self.backbone=backbone
-        self.model=sm.Unet(self.backbone,input_shape=self.img_dim, classes=self.data_channel,encoder_weights=None)
-        self.model.load_weights(model_weights)
-        
+        strategy = tf.distribute.OneDeviceStrategy(device="/CPU:0")
+        with strategy.scope():
+            self.model=sm.Unet(self.backbone,input_shape=self.img_dim, classes=self.data_channel,encoder_weights=None)
+            self.model.load_weights(model_weights)
+            
 
 class CRAFT(BaseDetector):
     def __init__(self, model_weights, img_dim=(1024,1024,3), data_channel=2, backbone="densenet121"):

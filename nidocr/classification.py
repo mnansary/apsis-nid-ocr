@@ -10,8 +10,6 @@ import tensorflow as tf
 import os
 import numpy as np
 import cv2 
-os.environ['SM_FRAMEWORK'] = 'tf.keras'
-import segmentation_models as sm
 from .utils import *
 import matplotlib.pyplot as plt
 #-------------------------
@@ -21,26 +19,17 @@ class Classifier(object):
     def __init__(self,
                 model_weights,
                 img_dim=(256,256,3),
-                data_channel=1,
                 num_classes=2,
-                labels=["nid","smart"],
-                backbone='densenet121'):
+                labels=["nid","smart"]):
         # Classifier Initially trained with unet
         self.img_dim=img_dim
-        self.data_channel=data_channel
-        self.backbone=backbone
         self.num_classes=num_classes
         self.labels=labels
-        
-        unet=sm.Unet(self.backbone,input_shape=self.img_dim,encoder_weights=None,classes=self.data_channel)
-        inp  =unet.input
-        # class
-        label=unet.get_layer(name="relu").output
-        label = tf.keras.layers.GlobalAveragePooling2D()(label)
-        label=tf.keras.layers.Dense(self.num_classes,activation="softmax",name="label")(label)
-        self.model=tf.keras.Model(inputs=inp,outputs=[label])
-        # load weights        
-        self.model.load_weights(model_weights)
+        strategy = tf.distribute.OneDeviceStrategy(device="/CPU:0")
+        with strategy.scope():
+            self.model=tf.keras.applications.DenseNet121(input_shape=self.img_dim,classes=num_classes,weights=None)
+            # load weights        
+            self.model.load_weights(model_weights)
     
     def process(self,img):
         # process
