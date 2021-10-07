@@ -9,7 +9,7 @@ import os
 from glob import glob
 from unicodedata import name
 from tqdm.auto import tqdm
-from .utils import LOG_INFO,padToFixedHeightWidth,GraphemeParser 
+from .utils import LOG_INFO,padToFixedHeightWidth,GraphemeParser,language 
 import PIL
 import PIL.ImageFont,PIL.Image,PIL.ImageDraw
 import random
@@ -19,7 +19,7 @@ import cv2
 import numpy as np 
 import matplotlib.pyplot as plt
 import math
-GP=GraphemeParser()
+GP=GraphemeParser(language.bangla)
 #--------------------
 # source
 #--------------------
@@ -328,7 +328,7 @@ class Data(object):
             height_loc=y2-y1
             
             # comps
-            comps=GP.word2grapheme(v)
+            comps=GP.process(v,return_graphemes=True)
             w_text,h_text=font.getsize(v)
             comp_str=''
             images=[]

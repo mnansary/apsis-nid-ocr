@@ -4,26 +4,26 @@ save_path="/home/apsisdev/ansary/DATASETS/APSIS/NID/"
 #-----------------------------------------------------------------------------------------------
 src_path="${save_path}source/"
 card_path="${save_path}cards/"
-seg_path="${save_path}segment/"
+class_path="${save_path}classification/"
 rec_path="${save_path}recog/"
 det_path="${save_path}detect/"
 proc_path="${save_path}processed/"
 #------------------------------------------card------------------------------------------------------
-python datagen_card.py $src_path $save_path --num_data 50000
+#python datagen_card.py $src_path $save_path --num_data 50000
 #----------------------------------------------------------------------------------------------------
-#------------------------------------------seg------------------------------------------------------
-python datagen_seg.py $src_path $card_path $save_path 
-python store_seg.py $seg_path
+#------------------------------------------class------------------------------------------------------
+#python datagen_class.py $src_path $card_path $save_path 
+#python store_class.py $class_path
 #---------------------------------------------------------------------------------------------------
 #------------------------------------------det------------------------------------------------------
-python datagen_det.py $card_path $save_path 
-python store_det.py $det_path
+#python datagen_det.py $card_path $save_path 
+#python store_det.py $det_path
 #---------------------------------------------------------------------------------------------------
 
 #------------------------------------------rec------------------------------------------------------
 python datagen_rec.py $src_path $card_path $save_path 
-#python process_rec.py $rec_path $save_path
-#python store_rec.py $proc_path
+python process_rec.py $rec_path $save_path
+python store_rec.py $proc_path
 #---------------------------------------------------------------------------------------------------
 
 echo succeded

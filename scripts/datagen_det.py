@@ -88,7 +88,7 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser("Synthetic NID/Smartcard Detection Data Creation Script")
     parser.add_argument("card_dir", help="Path to cards data")
     parser.add_argument("save_dir", help="Path to save the processed data")
-    parser.add_argument("--data_dim",required=False,default=256,help="dimension of data to save the images")
+    parser.add_argument("--data_dim",required=False,default=1024,help="dimension of data to save the images")
     parser.add_argument("--num_data",required=False,default=10000,help ="number of data to create : default=10000")
     
     args = parser.parse_args()

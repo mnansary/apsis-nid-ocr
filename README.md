@@ -2,7 +2,7 @@
 NID OCR Detection,Recognition and Segmentation Dataset 
 
 ```python
-Version: 0.0.1     
+Version: 0.0.2     
 Authors: Md. Nazmuddoha Ansary,
          Md. Rezwanul Haque,
          Md. Mobassir Hossain 
