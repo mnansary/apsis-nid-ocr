@@ -50,10 +50,10 @@ class OCR(object):
         
         if use_extractor:
             try:
-                ext_weights=os.path.join(model_dir,"segment.h5")
+                ext_weights=os.path.join(model_dir,"classifier.h5")
                 self.extractor=Extractor(ext_weights)
                 LOG_INFO("Extractor Loaded")    
-                card_type,card_image=self.extractor.process(dummy_path)
+                card_type=self.extractor.process(cv2.cvtColor(dummy_img,cv2.COLOR_BGR2RGB))
                 if card_type=="nid":
                     LOG_INFO("Extractor Initialized")
             except Exception as e:

@@ -38,9 +38,7 @@ class Extractor(object):
         label=unet.get_layer(name="relu").output
         label = tf.keras.layers.GlobalAveragePooling2D()(label)
         label=tf.keras.layers.Dense(self.num_classes,activation="softmax",name="label")(label)
-        # mask
-        mask=unet.output
-        self.model=tf.keras.Model(inputs=inp,outputs=[label,mask])
+        self.model=tf.keras.Model(inputs=inp,outputs=[label])
         # load weights        
         self.model.load_weights(model_weights)
     
@@ -53,11 +51,6 @@ class Extractor(object):
         data=np.expand_dims(img,axis=0)
         # predict
         pred=self.model.predict(data)
-        card_type=self.labels[np.argmax(pred[0][0])]
-        # card_map =pred[1][0]*255
-        # card_map=card_map.astype("uint8")
-        # card_map=cv2.resize(card_map,(w,h))
-        # pts=four_cords_crop_img(card_map)
-        # card_image=four_point_transform(org,pts)
-        return card_type#,card_image
+        card_type=self.labels[np.argmax(pred[0])]
+        return card_type
 
