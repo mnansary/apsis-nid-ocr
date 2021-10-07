@@ -13,7 +13,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from .detector import CRAFT
 from .recogonizer import RobustScanner
-from .segment import Extractor
+from .classification import Classifier
 from deepface import DeepFace
 from .data import card
 
@@ -24,10 +24,10 @@ from .data import card
 class OCR(object):
     def __init__(self,
                 model_dir,
-                use_extractor=True,
+                use_classifier=True,
                 use_detector=True,
                 use_recognizer=True,
-                use_facematcher=True):
+                use_facematcher=False):
         '''
             Instantiates an ocr model:
                 methods:
@@ -48,12 +48,12 @@ class OCR(object):
         for _,v in card.nid.front.box_dict.items():
             dummy_boxes.append(v)
         
-        if use_extractor:
+        if use_classifier:
             try:
                 ext_weights=os.path.join(model_dir,"classifier.h5")
-                self.extractor=Extractor(ext_weights)
+                self.classifier=Classifier(ext_weights)
                 LOG_INFO("Extractor Loaded")    
-                card_type=self.extractor.process(cv2.cvtColor(dummy_img,cv2.COLOR_BGR2RGB))
+                card_type=self.classifier.process(cv2.cvtColor(dummy_img,cv2.COLOR_BGR2RGB))
                 if card_type=="nid":
                     LOG_INFO("Extractor Initialized")
             except Exception as e:
@@ -192,7 +192,7 @@ class OCR(object):
         # dims
         img=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
         
-        card_type=self.extractor.process(img)
+        card_type=self.classifier.process(img)
         
         if card_type=="nid": 
             src=card.nid.front
@@ -232,19 +232,6 @@ class OCR(object):
         for field in df.field.unique():
             tdf=df.loc[df.field==field]
             response[field]=" ".join(tdf.text.tolist())
-        print(response.keys())
-        # correct numbers
-        if "o" in response["ID No."]:
-            response["ID No."]=response["ID No."].replace("o","0")
-        if "s" in response["ID No."]:
-            response["ID No."]=response["ID No."].replace("s","5")
-        if "z" in response["ID No."]:
-            response["ID No."]=response["ID No."].replace("z","2")
-        if "i" in response["ID No."]:
-            response["ID No."]=response["ID No."].replace("i","1")
-        if "l" in response["ID No."]:
-            response["ID No."]=response["ID No."].replace("l","1")
-
         response["image"]=img2base64(face)
         response["sign"]=img2base64(sign)
         

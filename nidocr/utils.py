@@ -406,3 +406,20 @@ def img2base64(img_detections):
     # result : string (utf-8)
     base64_detection = base64_detection.decode('utf-8')
     return base64_detection
+
+#--------------------------------------
+# text checking utils: TODO
+#--------------------------------------
+# correct numbers
+'''
+if "o" in response["ID No."]:
+    response["ID No."]=response["ID No."].replace("o","0")
+if "s" in response["ID No."]:
+response["ID No."]=response["ID No."].replace("s","5")
+if "z" in response["ID No."]:
+response["ID No."]=response["ID No."].replace("z","2")
+if "i" in response["ID No."]:
+response["ID No."]=response["ID No."].replace("i","1")
+if "l" in response["ID No."]:
+response["ID No."]=response["ID No."].replace("l","1")
+'''

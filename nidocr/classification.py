@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 #-------------------------
 # model
 #------------------------
-class Extractor(object):
+class Classifier(object):
     def __init__(self,
                 model_weights,
                 img_dim=(256,256,3),
@@ -25,7 +25,7 @@ class Extractor(object):
                 num_classes=2,
                 labels=["nid","smart"],
                 backbone='densenet121'):
-        # Extractor with unet
+        # Classifier Initially trained with unet
         self.img_dim=img_dim
         self.data_channel=data_channel
         self.backbone=backbone
@@ -43,8 +43,6 @@ class Extractor(object):
         self.model.load_weights(model_weights)
     
     def process(self,img):
-        org=np.copy(img)
-        h,w,d=img.shape
         # process
         img=cv2.resize(img,(self.img_dim[1],self.img_dim[0]))
         img=img/255.0
