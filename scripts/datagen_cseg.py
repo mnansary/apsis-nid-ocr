@@ -60,41 +60,42 @@ def main(args):
 
     for card_type,data_df in zip(["nid","smart"],[nid_df,smart_df]):
         for idx in tqdm(range(len(data_df))):
-            data={}
-            img_path =data_df.iloc[idx,0]
-            card_type=data_df.iloc[idx,1]
-            img,mask,base=render_data(backgen,img_path,src.config)
-            # image
-            if card_type=="nid":
-                img=cleanImage(img,remove_shadow=False,blur=False)
-            else:
-                img=cleanImage(img)
-            # mask
-            seg=np.copy(img)
-            seg[mask==0]=(0,0,0)
-            # coord
-            base=base.astype("float32")
-            h,w,_=img.shape
-            ry=data_dim/h
-            rx=data_dim/w
-            base[:,0]*=rx
-            base[:,1]*=ry
-            base=[list(c) for c in base]
-            coord=[]
-            for c in base:
-                x,y=c
-                coord.append([int(x),int(y)])
-            # save
-            img=cv2.resize(img,(data_dim,data_dim))
-            mask=cv2.resize(seg,(data_dim,data_dim))
-            
-            cv2.imwrite(os.path.join(img_dir,f"{card_type}_{idx}.png"),img)
-            cv2.imwrite(os.path.join(mask_dir,f"{card_type}_{idx}.png"),mask)
-            data["file"]=f"{card_type}_{idx}.png"
-            data["coord"]=coord
-            dicts.append(data)    
-            #except Exception as e:
-            #    pass
+            try:
+                data={}
+                img_path =data_df.iloc[idx,0]
+                card_type=data_df.iloc[idx,1]
+                img,mask,base=render_data(backgen,img_path,src.config)
+                # image
+                if card_type=="nid":
+                    img=cleanImage(img,remove_shadow=False,blur=False)
+                else:
+                    img=cleanImage(img)
+                # mask
+                seg=np.copy(img)
+                seg[mask==0]=(0,0,0)
+                # coord
+                base=base.astype("float32")
+                h,w,_=img.shape
+                ry=data_dim/h
+                rx=data_dim/w
+                base[:,0]*=rx
+                base[:,1]*=ry
+                base=[list(c) for c in base]
+                coord=[]
+                for c in base:
+                    x,y=c
+                    coord.append([int(x),int(y)])
+                # save
+                img=cv2.resize(img,(data_dim,data_dim))
+                mask=cv2.resize(seg,(data_dim,data_dim))
+                
+                cv2.imwrite(os.path.join(img_dir,f"{card_type}_{idx}.png"),img)
+                cv2.imwrite(os.path.join(mask_dir,f"{card_type}_{idx}.png"),mask)
+                data["file"]=f"{card_type}_{idx}.png"
+                data["coord"]=coord
+                dicts.append(data)    
+            except Exception as e:
+                pass
     df=pd.DataFrame(dicts)
     df.to_csv(data_csv,index=False)
 

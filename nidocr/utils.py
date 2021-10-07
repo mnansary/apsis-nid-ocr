@@ -294,6 +294,8 @@ def padWords(img,dim,ptype="central",pvalue=255,scope_pad=50):
     mask=0
     # check for pad
     h,w,d=img.shape
+    w_new=int(img_height* w/h) 
+    img=cv2.resize(img,(w_new,img_height),fx=0,fy=0, interpolation = cv2.INTER_NEAREST)
     
     if w > img_width:
         # for larger width
