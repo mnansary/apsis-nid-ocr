@@ -26,6 +26,7 @@ def main(args):
     save_dir=args.save_dir
     save_dir=create_dir(save_dir,"classification")
     img_dir =create_dir(save_dir,"images")
+    #mask_dir=create_dir(save_dir,"masks")
     data_csv =os.path.join(save_dir,"data.csv")
     num_data=int(args.num_data)
     data_dim=int(args.data_dim)
@@ -60,9 +61,29 @@ def main(args):
                 img_path =data_df.iloc[idx,0]
                 card_type=data_df.iloc[idx,1]
                 img,_,_=render_data(backgen,img_path,src.config)
+                '''
+                =========== reuse code for segmentation ===========
+                img,mask,base=render_data(backgen,img_path,src.config)
+                base=base.astype("float32")
+                h,w,_=img.shape
+                ry=data_dim/h
+                rx=data_dim/w
+                base[:,0]*=rx
+                base[:,1]*=ry
+                base=[list(c) for c in base]
+                coord=[]
+                for c in base:
+                    x,y=c
+                    coord.append([int(x),int(y)])
+                mask=cv2.resize(mask,(data_dim,data_dim))
+                data["coord"]=coord
+                =========== reuse code for segmentation ===========
+                '''
+                
                 img=cv2.resize(img,(data_dim,data_dim))
                 # save
                 cv2.imwrite(os.path.join(img_dir,f"{card_type}_{idx}.png"),img)
+                #cv2.imwrite(os.path.join(mask_dir,f"{card_type}_{idx}.png"),mask)
                 data["file"]=f"{card_type}_{idx}.png"
                 dicts.append(data)    
             except Exception as e:

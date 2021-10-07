@@ -51,6 +51,15 @@ def to_tfrecord(df,save_dir,r_num):
             with(open(image_path,'rb')) as fid:
                 image_bytes=fid.read()
             
+            '''
+            mask_path =str(image_path).replace('images','masks')
+            # mask
+            with(open(mask_path,'rb')) as fid:
+                mask_bytes=fid.read()
+            'mask':_bytes_feature(mask_bytes),
+            'bbox':_int64_feature(coord)  
+            '''
+            
             data ={ 'image':_bytes_feature(image_bytes),
                     'label':_int64_feature(label)
             }
@@ -96,6 +105,8 @@ def main(args):
     data_csv=os.path.join(seg_dir,"data.csv")
     df=pd.read_csv(data_csv)
     df.file =df.file.progress_apply(lambda x: os.path.join(img_dir,x))
+    #df.coord=df.coord.progress_apply(lambda x: literal_eval(x))
+    #df.coord=df.coord.progress_apply(lambda x: flat_coord(x))
     df=df.sample(frac=1)
     genTFRecords(df,save_dir)
 
