@@ -28,10 +28,13 @@ def pad_label(x,max_len,pad_value,start_end_value):
     '''
         lambda function to create padded label for robust scanner
     '''
-    x=[start_end_value]+x+[start_end_value]
-    pad=[pad_value for _ in range(max_len-len(x))]
-    return x+pad
-    
+    if len(x)>max_len-2:
+        return None
+    else:
+        x=[start_end_value]+x+[start_end_value]
+        pad=[pad_value for _ in range(max_len-len(x))]
+        return x+pad
+        
 def encode_label(x,vocab):
     label=[]
     for ch in x:
@@ -73,6 +76,8 @@ def main(args):
     df["img_path"]=df["filename"].progress_apply(lambda x:os.path.join(img_dir,x))
     # unicodes
     df["components"]=df.text.progress_apply(lambda x: GP.process(x))
+    df["components"]=df.components.progress_apply(lambda x: None if len(x)>max_len-2 else x)
+    df.dropna(inplace=True)
     # encoding
     df["encoded"]=df.components.progress_apply(lambda x:encode_label(x,vocab))
     df.dropna(inplace=True)
@@ -83,7 +88,10 @@ def main(args):
     LOG_INFO(f"start-end:{start_end_value}")
     LOG_INFO(f"pad:{pad_value}")
     df["label"]=df.encoded.progress_apply(lambda x:pad_label(x,max_len,pad_value,start_end_value))
-
+    df.dropna(inplace=True)
+    df["len"]=df.label.progress_apply(lambda x:len(x))
+    LOG_INFO(f"Max Len:{max(df['len'].tolist())}")
+    
     masks=[]
     #--- resize and pad images and create masks
     for idx in tqdm(range(len(df))):
