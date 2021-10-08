@@ -83,8 +83,8 @@ def main(args):
     df.dropna(inplace=True)
     # label formation
     LOG_INFO("Components: Start null, end null")
-    start_end_value=len(vocab)
-    pad_value =start_end_value+1
+    start_end_value=len(vocab)+1
+    pad_value =len(vocab)+2
     LOG_INFO(f"start-end:{start_end_value}")
     LOG_INFO(f"pad:{pad_value}")
     df["label"]=df.encoded.progress_apply(lambda x:pad_label(x,max_len,pad_value,start_end_value))
