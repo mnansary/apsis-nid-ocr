@@ -262,7 +262,7 @@ def correctPadding(img,dim,ptype="central",pvalue=255):
     
     w_new=int(img_height* w/h) 
     img=cv2.resize(img,(w_new,img_height),fx=0,fy=0, interpolation = cv2.INTER_NEAREST)
-        
+    h,w,d=img.shape
     if w > img_width:
         # for larger width
         h_new= int(img_width* h/w) 
@@ -292,8 +292,6 @@ def correctPadding(img,dim,ptype="central",pvalue=255):
 #----------------------------------------
 class Modifier:
     def __init__(self,
-                min_ops=1,
-                max_ops=2,
                 blur_kernel_size_max=6,
                 blur_kernel_size_min=3,
                 bi_filter_dim_min=7,
@@ -307,8 +305,6 @@ class Modifier:
         self.bi_filter_dim_max      =   bi_filter_dim_max
         self.bi_filter_sigma_min    =   bi_filter_sigma_min
         self.bi_filter_sigma_max    =   bi_filter_sigma_max
-        self.min_ops                =   min_ops
-        self.max_ops                =   max_ops
         
     def __initParams(self):
         self.blur_kernel_size=random.randrange(self.blur_kernel_size_min,
@@ -319,13 +315,12 @@ class Modifier:
                                                2)
         self.bi_filter_sigma =random.randint(self.bi_filter_sigma_min,
                                              self.bi_filter_sigma_max)
-        self.num_ops         =random.randint(self.min_ops,self.max_ops)
         self.ops             =   [  self.__blur,
                                     self.__gaussBlur,
-                                    self.__medianBlur]
-                                    #self.__biFilter,
-                                    #self.__gaussNoise,
-                                    #self.__addBrightness]
+                                    self.__medianBlur,
+                                    self.__biFilter,
+                                    self.__gaussNoise,
+                                    self.__addBrightness]
 
 
     def __blur(self,img):
@@ -374,10 +369,9 @@ class Modifier:
     
     def noise(self,img):
         self.__initParams()
-        for _ in range(self.num_ops):
-            img=img.astype("uint8")
-            idx = random.choice(range(len(self.ops)))
-            img = self.ops.pop(idx)(img)
+        img=img.astype("uint8")
+        idx = random.choice(range(len(self.ops)))
+        img = self.ops.pop(idx)(img)
         return img
 #--------------------
 # Parser class

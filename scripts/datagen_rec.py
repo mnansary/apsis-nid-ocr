@@ -53,18 +53,21 @@ def main(args):
             img_path=text_dict["img_path"][didx]
             mask_path=img_path.replace("images","masks")
             iden    =text_dict["file"][didx].split(".")[0]
+            # image    
+            img=cv2.imread(img_path)
+            # crop text and image data
+            #if random_exec():
+            #    img=mod.noise(img)
+            
             # card type
             if "nid" in img_path:
                 card_text=src.card.nid.front.text
+                img=cleanImage(img,remove_shadow=False,blur=False)
             else:
                 card_text=src.card.smart.front.text
+                img=cleanImage(img,blur=False)
             # mask
             mask=cv2.imread(mask_path,0)
-            # crop text and image data
-                        # image    
-            img=cv2.imread(img_path)
-            if random_exec():
-                img=mod.noise(img)
             
             for k,v in card_text.items():
                 text=text_dict[k][didx]

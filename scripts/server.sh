@@ -10,7 +10,7 @@ rec_path="${save_path}recog/"
 det_path="${save_path}detect/"
 proc_path="${save_path}processed/"
 #------------------------------------------card------------------------------------------------------
-#python datagen_card.py $src_path $save_path --num_data 50000
+python datagen_card.py $src_path $save_path --num_data 50000
 #----------------------------------------------------------------------------------------------------
 #------------------------------------------class------------------------------------------------------
 #python datagen_class.py $src_path $card_path $save_path 
@@ -27,7 +27,7 @@ proc_path="${save_path}processed/"
 #---------------------------------------------------------------------------------------------------
 
 #------------------------------------------rec------------------------------------------------------
-#python datagen_rec.py $src_path $card_path $save_path 
+python datagen_rec.py $src_path $card_path $save_path 
 python process_rec.py $rec_path $save_path
 python store_rec.py $proc_path
 #---------------------------------------------------------------------------------------------------
