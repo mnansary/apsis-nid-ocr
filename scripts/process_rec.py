@@ -13,7 +13,7 @@ import cv2
 import os
 import json
 import numpy as np
-from dataLib.utils import LOG_INFO, correctPadding,GraphemeParser, create_dir,language
+from dataLib.utils import *
 import math
 import pandas as pd
 from tqdm.auto import tqdm
@@ -54,6 +54,7 @@ def main(args):
     img_width   =   int(args.img_width)
     factor      =   int(args.factor)
     max_len     =   int(args.max_len)
+    use_lower   =   args.use_lower_only
     #--- resource----------------
     save_dir    =   create_dir(save_dir,"processed")
     img_save_dir=   create_dir(save_dir,"images")
@@ -74,6 +75,9 @@ def main(args):
     
     #--- df processing-----------
     df["img_path"]=df["filename"].progress_apply(lambda x:os.path.join(img_dir,x))
+
+    if use_lower:
+        df.text=df.text.progress_apply(lambda x:x.lower())
     # unicodes
     df["components"]=df.text.progress_apply(lambda x: GP.process(x))
     df["components"]=df.components.progress_apply(lambda x: None if len(x)>max_len-2 else x)
@@ -131,5 +135,6 @@ if __name__=="__main__":
     parser.add_argument("--img_width",required=False,default=512,help ="width dimension to save images")
     parser.add_argument("--factor",required=False,default=32,help ="mask factor")
     parser.add_argument("--max_len",required=False,default=40,help ="max length to pad")
+    parser.add_argument("--use_lower_only",required=False,type=str2bool,default=False,help ="use lowercase words")
     args = parser.parse_args()
     main(args)

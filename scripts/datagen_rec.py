@@ -56,16 +56,16 @@ def main(args):
             # image    
             img=cv2.imread(img_path)
             # crop text and image data
-            #if random_exec():
-            #    img=mod.noise(img)
+            if random_exec():
+               img=mod.noise(img)
             
             # card type
             if "nid" in img_path:
                 card_text=src.card.nid.front.text
-                img=cleanImage(img,remove_shadow=False,blur=False)
             else:
                 card_text=src.card.smart.front.text
-                img=cleanImage(img,blur=False)
+            
+            img=cleanImage(img,remove_shadow=False,blur=False)
             # mask
             mask=cv2.imread(mask_path,0)
             
