@@ -17,8 +17,8 @@ proc_path="${save_path}processed/"
 #python store_class.py $class_path
 #---------------------------------------------------------------------------------------------------
 #------------------------------------------cseg------------------------------------------------------
-#python datagen_cseg.py $src_path $card_path $save_path 
-#python store_cseg.py $cseg_path
+python datagen_cseg.py $src_path $card_path $save_path --colored True
+python store_cseg.py $cseg_path
 #---------------------------------------------------------------------------------------------------
 
 #------------------------------------------det------------------------------------------------------
@@ -27,9 +27,9 @@ proc_path="${save_path}processed/"
 #---------------------------------------------------------------------------------------------------
 
 #------------------------------------------rec------------------------------------------------------
-python datagen_rec.py $src_path $card_path $save_path 
-python process_rec.py $rec_path $save_path 
-python store_rec.py $proc_path
+#python datagen_rec.py $src_path $card_path $save_path 
+#python process_rec.py $rec_path $save_path 
+#python store_rec.py $proc_path
 #---------------------------------------------------------------------------------------------------
 
 echo succeded

@@ -97,8 +97,8 @@ class Data(object):
                     template    =   os.path.join(self.res_dir,"nid_template_back.png")
 
         class config:
-            max_rotation  = 30
-            max_warp_perc = 2 
+            max_rotation  = 45
+            max_warp_perc = 5 
             max_pad_perc  = 100
             use_scope_rotation=True
         class name:

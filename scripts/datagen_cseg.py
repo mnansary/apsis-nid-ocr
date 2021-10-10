@@ -13,7 +13,7 @@ sys.path.append('../')
 import argparse
 from dataLib.data import Data
 from dataLib.segment import render_data
-from dataLib.utils import cleanImage, create_dir,LOG_INFO, enhanceImage, threshold_image
+from dataLib.utils import *
 from tqdm.auto import tqdm
 import os
 import cv2
@@ -28,6 +28,8 @@ def main(args):
     card_dir=args.card_dir
     src_dir =args.src_dir
     save_dir=args.save_dir
+    use_colored=args.colored
+    
     save_dir=create_dir(save_dir,"segment")
     img_dir =create_dir(save_dir,"images")
     mask_dir=create_dir(save_dir,"masks")
@@ -65,11 +67,8 @@ def main(args):
                 img_path =data_df.iloc[idx,0]
                 card_type=data_df.iloc[idx,1]
                 img,mask,base=render_data(backgen,img_path,src.config)
-                # image
-                if card_type=="nid":
+                if not use_colored:
                     img=cleanImage(img,remove_shadow=False,blur=False)
-                else:
-                    img=cleanImage(img)
                 # mask
                 seg=np.copy(img)
                 seg[mask==0]=(0,0,0)
@@ -90,7 +89,7 @@ def main(args):
                 mask=cv2.resize(seg,(data_dim,data_dim))
                 
                 cv2.imwrite(os.path.join(img_dir,f"{card_type}_{idx}.png"),img)
-                cv2.imwrite(os.path.join(mask_dir,f"{card_type}_{idx}.png"),mask)
+                cv2.imwrite(os.path.join(mask_dir,f"{card_type}_{idx}.png"),threshold_image(mask,blur=False))
                 data["file"]=f"{card_type}_{idx}.png"
                 data["coord"]=coord
                 dicts.append(data)    
@@ -107,8 +106,8 @@ if __name__=="__main__":
     parser.add_argument("src_dir", help="Path to source data")
     parser.add_argument("card_dir", help="Path to cards data")
     parser.add_argument("save_dir", help="Path to save the processed data")
-    parser.add_argument("--data_dim",required=False,default=256,help="dimension of data to save the images")
-    parser.add_argument("--num_data",required=False,default=10000,help ="number of data to create : default=10000")
-    
+    parser.add_argument("--data_dim",required=False,default=512,help="dimension of data to save the images")
+    parser.add_argument("--num_data",required=False,default=100000,help ="number of data to create : default=100000")
+    parser.add_argument("--colored",required=False,type=str2bool,default=False,help ="generate colored images for segmentation")
     args = parser.parse_args()
     main(args)
