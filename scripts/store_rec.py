@@ -42,25 +42,28 @@ def to_tfrecord(df,save_dir,r_num,iden):
     tfrecord_path=os.path.join(save_dir,tfrecord_name)
     with tf.io.TFRecordWriter(tfrecord_path) as writer:    
         for idx in range(len(df)):
-            image_path=df.iloc[idx,0]
-            label    =df.iloc[idx,1]
-            #glabel    =df.iloc[idx,2]
-            #'glabel':_int64_feature(glabel),
-            mask      =df.iloc[idx,2]
-            #image
-            with(open(image_path,'rb')) as fid:
-                image_bytes=fid.read()
-            
-            data ={ 'image':_bytes_feature(image_bytes),
-                    'label':_int64_feature(label),
-                    'mask':_int64_feature(mask)
-            }
-            
-            # write
-            features=tf.train.Features(feature=data)
-            example= tf.train.Example(features=features)
-            serialized=example.SerializeToString()
-            writer.write(serialized)
+            try:
+                image_path=df.iloc[idx,0]
+                label    =df.iloc[idx,1]
+                #glabel    =df.iloc[idx,2]
+                #'glabel':_int64_feature(glabel),
+                mask      =df.iloc[idx,2]
+                #image
+                with(open(image_path,'rb')) as fid:
+                    image_bytes=fid.read()
+                
+                data ={ 'image':_bytes_feature(image_bytes),
+                        'label':_int64_feature(label),
+                        'mask':_int64_feature(mask)
+                }
+                
+                # write
+                features=tf.train.Features(feature=data)
+                example= tf.train.Example(features=features)
+                serialized=example.SerializeToString()
+                writer.write(serialized)
+            except Exception as e:
+                print(e)
 
 
 def genTFRecords(df,save_dir,iden):
