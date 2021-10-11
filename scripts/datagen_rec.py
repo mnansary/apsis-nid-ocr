@@ -29,7 +29,7 @@ def main(args):
     save_dir=create_dir(save_dir,"recog")    
     img_dir =create_dir(save_dir,"images")
     data_csv =os.path.join(save_dir,"data.csv")
-    
+    gen_scene=args.pure_scene_text
     src=Data(src_dir)
     backgen=src.backgroundGenerator()
     LOG_INFO(save_dir)
@@ -65,7 +65,6 @@ def main(args):
             else:
                 card_text=src.card.smart.front.text
             
-            #img=cleanImage(img,remove_shadow=False,blur=False)
             # mask
             mask=cv2.imread(mask_path,0)
             
@@ -80,13 +79,14 @@ def main(args):
                     # word img crop
                     idx=np.where(mask_word==255)
                     y_min,y_max,x_min,x_max = np.min(idx[0]), np.max(idx[0]), np.min(idx[1]), np.max(idx[1])
-                    #word_img=img[y_min:y_max,x_min:x_max]
-                    
-                    word_mask=mask[y_min:y_max,x_min:x_max]
-                    word_img=next(backgen)
-                    h,w=word_mask.shape
-                    word_img=cv2.resize(word_img,(w,h))
-                    word_img[word_mask>0]=randColor()
+                    if gen_scene:
+                        word_mask=mask[y_min:y_max,x_min:x_max]
+                        word_img=next(backgen)
+                        h,w=word_mask.shape
+                        word_img=cv2.resize(word_img,(w,h))
+                        word_img[word_mask>0]=randColor()
+                    else:
+                        word_img=img[y_min:y_max,x_min:x_max]
                     
                     filename=f"{img_count}.png"
                     cv2.imwrite(os.path.join(img_dir,filename),word_img)
@@ -105,5 +105,6 @@ if __name__=="__main__":
     parser.add_argument("src_dir", help="Path to source data")
     parser.add_argument("card_dir", help="Path to cards data")
     parser.add_argument("save_dir", help="Path to save the processed data")
+    parser.add_argument("--pure_scene_text",required=False,default=False,type=str2bool,help ="generate pure scene text")
     args = parser.parse_args()
     main(args)

@@ -52,10 +52,10 @@ class OCR(object):
             try:
                 ext_weights=os.path.join(model_dir,"classifier.h5")
                 self.classifier=Classifier(ext_weights)
-                LOG_INFO("Extractor Loaded")    
+                LOG_INFO("Classifier Loaded")    
                 card_type=self.classifier.process(cv2.cvtColor(dummy_img,cv2.COLOR_BGR2RGB))
                 if card_type=="nid":
-                    LOG_INFO("Extractor Initialized")
+                    LOG_INFO("Classifier Initialized")
             except Exception as e:
                 LOG_INFO(f"EXECUTION EXCEPTION: {e}",mcolor="red")
             

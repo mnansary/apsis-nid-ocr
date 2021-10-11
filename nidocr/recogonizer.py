@@ -70,7 +70,7 @@ class RobustScanner(object):
         # config-globals
         #-------------
         with open(os.path.join(model_dir,"vocab.json")) as f:
-            vocab = json.load(f)["gvocab"][1:]    
+            vocab = json.load(f)["vocab"]    
         self.vocab=vocab
 
         #-------------------
@@ -79,8 +79,8 @@ class RobustScanner(object):
         self.img_height  =  64
         self.img_width   =  512
         self.nb_channels =  3
-        self.pos_max     =  80          
-        self.enc_filters =  1024
+        self.pos_max     =  40          
+        self.enc_filters =  256
         self.factor      =  32
 
         # calculated
@@ -130,6 +130,8 @@ class RobustScanner(object):
         backbone=tf.keras.applications.DenseNet121(input_tensor=img ,weights=None,include_top=False)
         # feat_out
         enc=backbone.output
+        # enc 
+        enc=tf.keras.layers.Conv2D(self.enc_filters,kernel_size=3,padding="same")(enc)
         return tf.keras.Model(inputs=img,outputs=enc,name="rs_encoder")
 
     def seq_decoder(self):
