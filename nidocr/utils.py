@@ -16,6 +16,8 @@ import matplotlib.pyplot as plt
 import random
 import base64
 from io import BytesIO
+
+from dataLib.utils import random_exec
 #---------------------------------------------------------------
 def LOG_INFO(msg,mcolor='blue'):
     '''
@@ -123,15 +125,24 @@ def cleanImage(img,remove_shadow=True,blur=True):
     img= cv2.fastNlMeansDenoisingColored(img,None,10,10,7,21)
     return img
 #---------------------------------------------------------------
-def enhanceImage(img,factor=10):
+def enhanceImage(img):
     '''
         enhances an image based on contrast
     '''
     img=Image.fromarray(img)
-    con_enhancer = ImageEnhance.Contrast(img)
-    img= con_enhancer.enhance(factor)
+    if random_exec(weights=[0.5,0.5]):
+        # color
+        factor=random.randint(1,5)
+        col_enhancer = ImageEnhance.Color(img)
+        img= col_enhancer.enhance(factor)
+    if random_exec(weights=[0.5,0.5]):
+        # contrast
+        factor=random.randint(1,3)
+        con_enhancer = ImageEnhance.Contrast(img)
+        img= con_enhancer.enhance(factor)
     img=np.array(img)
-    return img 
+    return img
+#--------------
 
 
 #---------------------------------------------------------------

@@ -10,12 +10,14 @@ sys.path.append('../')
 
 import argparse
 from dataLib.data import Data
-from dataLib.utils import create_dir,LOG_INFO
+from dataLib.utils import *
 from tqdm.auto import tqdm
 import os
 import cv2
 import random
 import pandas as pd
+import matplotlib.pyplot as plt
+
 
 def main(args):
     data_dir=args.data_dir
@@ -31,9 +33,15 @@ def main(args):
     dicts=[]
 
     for card_type in ["nid","smart"]:
+        if card_type=="nid":
+            aug=Modifier(use_brightness=False)
+        else:
+            aug=Modifier()
         for i in tqdm(range(n_data)):
             try:
                 image,mask,data=src.createCardFront(card_type)
+                image=enhanceImage(image)
+                image=aug.noise(image)
                 # save
                 cv2.imwrite(os.path.join(img_dir,f"{card_type}_{i}.png"),image)
                 cv2.imwrite(os.path.join(mask_dir,f"{card_type}_{i}.png"),mask)

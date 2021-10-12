@@ -134,15 +134,24 @@ def cleanImage(img,remove_shadow=True,blur=True):
     img= cv2.fastNlMeansDenoisingColored(img,None,10,10,7,21)
     return img
 #---------------------------------------------------------------
-def enhanceImage(img,factor=10):
+def enhanceImage(img):
     '''
         enhances an image based on contrast
     '''
     img=Image.fromarray(img)
-    con_enhancer = ImageEnhance.Contrast(img)
-    img= con_enhancer.enhance(factor)
+    if random_exec(weights=[0.5,0.5]):
+        # color
+        factor=random.randint(1,5)
+        col_enhancer = ImageEnhance.Color(img)
+        img= col_enhancer.enhance(factor)
+    if random_exec(weights=[0.5,0.5]):
+        # contrast
+        factor=random.randint(1,5)
+        con_enhancer = ImageEnhance.Contrast(img)
+        img= con_enhancer.enhance(factor)
     img=np.array(img)
-    return img 
+    return img
+
 #---------------------------------------------------------------
 def padDetectionImage(img):
     cfg={}
@@ -305,7 +314,12 @@ class Modifier:
                 bi_filter_dim_min=7,
                 bi_filter_dim_max=12,
                 bi_filter_sigma_max=80,
-                bi_filter_sigma_min=70):
+                bi_filter_sigma_min=70,
+                use_gaussblur=True,
+                use_brightness=True,
+                use_bifilter=True,
+                use_gaussnoise=False,
+                use_medianblur=False):
 
         self.blur_kernel_size_max   =   blur_kernel_size_max
         self.blur_kernel_size_min   =   blur_kernel_size_min
@@ -313,6 +327,11 @@ class Modifier:
         self.bi_filter_dim_max      =   bi_filter_dim_max
         self.bi_filter_sigma_min    =   bi_filter_sigma_min
         self.bi_filter_sigma_max    =   bi_filter_sigma_max
+        self.use_brightness         =   use_brightness
+        self.use_bifilter           =   use_bifilter
+        self.use_gaussnoise         =   use_gaussnoise
+        self.use_gaussblur          =   use_gaussblur
+        self.use_medianblur         =   use_medianblur
         
     def __initParams(self):
         self.blur_kernel_size=random.randrange(self.blur_kernel_size_min,
@@ -323,12 +342,17 @@ class Modifier:
                                                2)
         self.bi_filter_sigma =random.randint(self.bi_filter_sigma_min,
                                              self.bi_filter_sigma_max)
-        self.ops             =   [  self.__blur,
-                                    self.__gaussBlur,
-                                    self.__medianBlur,
-                                    self.__biFilter,
-                                    self.__gaussNoise,
-                                    self.__addBrightness]
+        self.ops             =   [  self.__blur]
+        if self.use_medianblur:
+            self.ops.append(self.__medianBlur)
+        if self.use_gaussblur:
+            self.ops.append(self.__gaussBlur)
+        if self.use_gaussnoise:
+            self.ops.append(self.__gaussNoise)
+        if self.use_bifilter:
+            self.ops.append(self.__biFilter)
+        if self.use_brightness:
+            self.ops.append(self.__addBrightness)
 
 
     def __blur(self,img):
