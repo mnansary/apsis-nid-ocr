@@ -22,7 +22,6 @@ tqdm.pandas()
 
 def main(args):
     #-----------------
-    mod=Modifier()
     card_dir=args.card_dir
     src_dir =args.src_dir
     save_dir=args.save_dir
@@ -52,19 +51,14 @@ def main(args):
             # img_path
             img_path=text_dict["img_path"][didx]
             mask_path=img_path.replace("images","masks")
-            iden    =text_dict["file"][didx].split(".")[0]
-            # image    
-            img=cv2.imread(img_path)
-            # crop text and image data
-            if random_exec():
-               img=mod.noise(img)
-            
             # card type
             if "nid" in img_path:
                 card_text=src.card.nid.front.text
             else:
                 card_text=src.card.smart.front.text
-            
+            # image    
+            img=cv2.imread(img_path)
+            img=remove_shadows(img)
             # mask
             mask=cv2.imread(mask_path,0)
             
