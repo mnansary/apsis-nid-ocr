@@ -96,23 +96,23 @@ class RobustScanner(object):
         LOG_INFO(f"Pad Value:{self.pad_value}")
         LOG_INFO(f"Start End:{self.start_end}")
 
-        strategy = tf.distribute.OneDeviceStrategy(device="/CPU:0")
-        with strategy.scope():
-            self.encm    =  self.encoder()
-            self.encm.load_weights(os.path.join(model_dir,"enc.h5"))      
-            LOG_INFO("encm loaded")
-            self.seqm    =  self.seq_decoder()
-            self.seqm.load_weights(os.path.join(model_dir,"seq.h5"))      
-            LOG_INFO("seqm loaded")
-            
-            self.posm    =  self.pos_decoder()
-            self.posm.load_weights(os.path.join(model_dir,"pos.h5"))      
-            LOG_INFO("posm loaded")
-            
-            self.fusm    =  self.fusion()
-            self.fusm.load_weights(os.path.join(model_dir,"fuse.h5"))      
-            LOG_INFO("fusm loaded")
+        #strategy = tf.distribute.OneDeviceStrategy(device="/CPU:0")
+        #with strategy.scope():
+        self.encm    =  self.encoder()
+        self.encm.load_weights(os.path.join(model_dir,"enc.h5"))      
+        LOG_INFO("encm loaded")
+        self.seqm    =  self.seq_decoder()
+        self.seqm.load_weights(os.path.join(model_dir,"seq.h5"))      
+        LOG_INFO("seqm loaded")
         
+        self.posm    =  self.pos_decoder()
+        self.posm.load_weights(os.path.join(model_dir,"pos.h5"))      
+        LOG_INFO("posm loaded")
+        
+        self.fusm    =  self.fusion()
+        self.fusm.load_weights(os.path.join(model_dir,"fuse.h5"))      
+        LOG_INFO("fusm loaded")
+    
     def encoder(self):
         '''
         creates the encoder part:
@@ -229,6 +229,8 @@ class RobustScanner(object):
                 word=word_process_func(word)
             # word
             word,vmask=padWords(word,(self.img_height,self.img_width),ptype="left")
+            plt.imshow(word)
+            plt.show()
             word=np.expand_dims(word,axis=0) 
             # image
             images.append(word)

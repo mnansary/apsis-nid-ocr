@@ -75,30 +75,38 @@ def stripPads(arr,
     arr=arr[:, ~np.all(arr == val, axis=0)]
     return arr
 #---------------------------------------------------------------
-def remove_shadows(img):
-    '''
-    removes shadows and thresholds
-    '''
-    assert len(img.shape)==3
-    img= cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+def remove_shadows(image: np.ndarray):
+    # split the image channels into b,g,r
+    b = image[:,:,0]
+    g = image[:,:,1]
+    r = image[:,:,2]
+    rgb_planes = [b,g,r]
+
+    # iniatialising the final shadow free normalised image list for planes
     result_norm_planes = []
-    # split rgb
-    rgb_planes = cv2.split(img)
-    # clean planes
+
+    # removing the shadows in individual planes
     for plane in rgb_planes:
-        # dilate
-        dilated_img = cv2.dilate(plane, np.ones((7,7), np.uint8))
-        # background
-        bg_img = cv2.medianBlur(dilated_img, 21)
-        # difference
-        diff_img = 255 - cv2.absdiff(plane, bg_img)
-        # normalized
-        norm_img = cv2.normalize(diff_img,None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
-        # append
-        result_norm_planes.append(norm_img)
-    # merge rgb
-    img = cv2.merge(result_norm_planes)
-    return img
+        # dialting the image to spead the text to the background
+        dilated_image = cv2.dilate(plane, np.ones((7,7), np.uint8))
+        
+        # blurring the image to get the backround image
+        bg_image = cv2.medianBlur(dilated_image, 21)
+
+        # subtracting the plane-background from the image-plane
+        diff_image = 255 - cv2.absdiff(plane, bg_image)
+
+        # normalisng the plane
+        norm_image = cv2.normalize(diff_image,None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+
+        # appending the plane to the final planes list
+        result_norm_planes.append(norm_image)
+
+    # merging the shadow-free planes into one image
+    normalised_image = cv2.merge(result_norm_planes)
+
+    # returning the normalised image
+    return normalised_image
 #---------------------------------------------------------------
 def threshold_image(img,blur=True):
     '''

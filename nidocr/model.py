@@ -208,6 +208,7 @@ class OCR(object):
         x1,y1,x2,y2=src.sign
         sign=img[y1:y2,x1:x2]
         img= cv2.fastNlMeansDenoisingColored(img,None,10,10,7,21)
+        img=remove_shadows(img)
         # boxes
         text_boxes=self.detect_boxes(img,shift_x_max=shift_x_max)
         box_dict,df=self.process_boxes(text_boxes,src.box_dict)
