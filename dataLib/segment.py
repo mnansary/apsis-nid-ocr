@@ -142,11 +142,7 @@ def augment_img_base(img_path,config):
     
     mask=np.ones((height,width))*255
     mask=mask.astype("uint8")
-    # create region mask
-    for k,v in card.front.items():
-        x_min,y_min,x_max,y_max=v
-        mask[y_min:y_max,x_min:x_max]=k+1 
-
+    
     curr_coord=[[0,0], 
                 [width-1,0], 
                 [width-1,height-1], 
