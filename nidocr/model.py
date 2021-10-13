@@ -8,6 +8,7 @@ from __future__ import print_function
 # imports
 #-------------------------
 import cv2
+import math
 from .utils import *
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -144,13 +145,15 @@ class OCR(object):
         boxes=self.det.detect(img,det_thresh=det_thresh,text_thresh=text_thresh)
         return boxes
     
-    def process_boxes(self,text_boxes,region_dict):
+    def process_boxes(self,text_boxes,region_dict,rx,ry):
         '''
             keeps relevant boxes with respect to region
             args:
                 text_boxes  :  detected text boxes by the detector
                 region_dict :  key,value pair dictionary of region_bbox and field info 
                                => {"field_name":[x_min,y_min,x_max,y_max]}
+                rx          :  x dim ratio
+                ry          :  y dim ratio
         '''
         # extract region boxes
         region_boxes=[]
@@ -158,13 +161,21 @@ class OCR(object):
         for k,v in region_dict.items():
             region_fields.append(k)
             region_boxes.append(v)
+        # ref boxes
+        ref_boxes=[]
+        for box in text_boxes:
+            x1,y1,x2,y2=box
+            ref_boxes.append([int(math.ceil(x1*rx)),
+                              int(math.ceil(y1*ry)),
+                              int(math.ceil(x2*rx)),
+                              int(math.ceil(y2*ry))])
         # sort boxed
-        data=pd.DataFrame({"box":text_boxes})
+        data=pd.DataFrame({"box":ref_boxes})
         # detect field
         data["field"]=data.box.apply(lambda x:localize_box(x,region_boxes))
         data.dropna(inplace=True) 
         data["field"]=data["field"].apply(lambda x:region_fields[int(x)])
-        
+        data["box"]=text_boxes
         box_dict={}
         df_box=[]
         df_field=[]
@@ -216,10 +227,14 @@ class OCR(object):
         face=ref[y1:y2,x1:x2]
         x1,y1,x2,y2=src.sign
         sign=ref[y1:y2,x1:x2]
-        
+        # ratio
+        ho,wo,d=img.shape
+        hr,wr,d=ref.shape
+        rx=wr/wo
+        ry=hr/ho
         # boxes
         text_boxes=self.detect_boxes(img)
-        box_dict,df=self.process_boxes(text_boxes,src.box_dict)
+        box_dict,df=self.process_boxes(text_boxes,src.box_dict,rx,ry)
         print(box_dict)
         
         # recognition
