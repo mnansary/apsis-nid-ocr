@@ -69,7 +69,7 @@ class RobustScanner(object):
         #-------------
         # config-globals
         #-------------
-        with open(os.path.join(model_dir,"vocab.json")) as f:
+        with open(os.path.join(model_dir,"rec","vocab.json")) as f:
             vocab = json.load(f)["vocab"]    
         self.vocab=vocab
 
@@ -96,23 +96,23 @@ class RobustScanner(object):
         LOG_INFO(f"Pad Value:{self.pad_value}")
         LOG_INFO(f"Start End:{self.start_end}")
 
-        #strategy = tf.distribute.OneDeviceStrategy(device="/CPU:0")
-        #with strategy.scope():
-        self.encm    =  self.encoder()
-        self.encm.load_weights(os.path.join(model_dir,"enc.h5"))      
-        LOG_INFO("encm loaded")
-        self.seqm    =  self.seq_decoder()
-        self.seqm.load_weights(os.path.join(model_dir,"seq.h5"))      
-        LOG_INFO("seqm loaded")
+        strategy = tf.distribute.OneDeviceStrategy(device="/CPU:0")
+        with strategy.scope():
+            self.encm    =  self.encoder()
+            self.encm.load_weights(os.path.join(model_dir,"rec","enc.h5"))      
+            LOG_INFO("encm loaded")
+            self.seqm    =  self.seq_decoder()
+            self.seqm.load_weights(os.path.join(model_dir,"rec","seq.h5"))      
+            LOG_INFO("seqm loaded")
+            
+            self.posm    =  self.pos_decoder()
+            self.posm.load_weights(os.path.join(model_dir,"rec","pos.h5"))      
+            LOG_INFO("posm loaded")
+            
+            self.fusm    =  self.fusion()
+            self.fusm.load_weights(os.path.join(model_dir,"rec","fuse.h5"))      
+            LOG_INFO("fusm loaded")
         
-        self.posm    =  self.pos_decoder()
-        self.posm.load_weights(os.path.join(model_dir,"pos.h5"))      
-        LOG_INFO("posm loaded")
-        
-        self.fusm    =  self.fusion()
-        self.fusm.load_weights(os.path.join(model_dir,"fuse.h5"))      
-        LOG_INFO("fusm loaded")
-    
     def encoder(self):
         '''
         creates the encoder part:
@@ -214,19 +214,19 @@ class RobustScanner(object):
 
 
         
-    def porcess_data(self,img,boxes,word_process_func=None):
+    def porcess_data(self,img,boxes):
         self.boxes=boxes
         images=[]
         masks=[]
         poss=[]
         h,w=img.shape[0],img.shape[1]
-
+        plt.imshow(img)
+        plt.show()
+            
         for box in tqdm(boxes):
             # crop    
             x_min,y_min,x_max,y_max=box
             word=img[y_min:y_max,x_min:x_max] 
-            if word_process_func is not None: 
-                word=word_process_func(word)
             # word
             word,vmask=padWords(word,(self.img_height,self.img_width),ptype="left")
             plt.imshow(word)
@@ -280,12 +280,12 @@ class RobustScanner(object):
             texts.append("".join([self.vocab[l] for l in _label]))
         return texts
 
-    def recognize(self,img,boxes,batch_size=32,infer_len=10,word_process_func=None):
+    def recognize(self,img,boxes,batch_size=32,infer_len=10):
         '''
             final wrapper
         '''
         texts=[]
-        images,masks,poss=self.porcess_data(img,boxes,word_process_func=word_process_func)
+        images,masks,poss=self.porcess_data(img,boxes)
         
         for idx in tqdm(range(0,len(images),batch_size)):
             batch={}

@@ -131,11 +131,11 @@ def enhanceImage(img):
     '''
     img=Image.fromarray(img)
     # color
-    col_enhancer = ImageEnhance.Color(img)
-    img= col_enhancer.enhance(2)
+    #col_enhancer = ImageEnhance.Color(img)
+    #img= col_enhancer.enhance(5)
     # contrast
     con_enhancer = ImageEnhance.Contrast(img)
-    img= con_enhancer.enhance(2)
+    img= con_enhancer.enhance(5)
     img=np.array(img)
     return img
 #--------------

@@ -16,7 +16,7 @@ from .recogonizer import RobustScanner
 from .classification import Classifier
 from deepface import DeepFace
 from .data import card
-
+from .locator import Locator
 #-------------------------
 # class
 #------------------------
@@ -25,6 +25,7 @@ class OCR(object):
     def __init__(self,
                 model_dir,
                 use_classifier=True,
+                use_locator=True,
                 use_detector=True,
                 use_recognizer=True,
                 use_facematcher=False):
@@ -50,7 +51,7 @@ class OCR(object):
         
         if use_classifier:
             try:
-                ext_weights=os.path.join(model_dir,"classifier.h5")
+                ext_weights=os.path.join(model_dir,"cls","classifier.h5")
                 self.classifier=Classifier(ext_weights)
                 LOG_INFO("Classifier Loaded")    
                 card_type=self.classifier.process(cv2.cvtColor(dummy_img,cv2.COLOR_BGR2RGB))
@@ -59,11 +60,19 @@ class OCR(object):
             except Exception as e:
                 LOG_INFO(f"EXECUTION EXCEPTION: {e}",mcolor="red")
             
+        if use_locator:
+            try:
+                self.locator=Locator(weights_path=model_dir)
+                LOG_INFO("Locator Loaded")    
+                ref=self.locator.process(cv2.cvtColor(dummy_img,cv2.COLOR_BGR2RGB))
+                LOG_INFO("Locator Initialized")
+            except Exception as e:
+                LOG_INFO(f"EXECUTION EXCEPTION: {e}",mcolor="red")
 
         # detector weight loading and initialization
         if use_detector:
             try:
-                craft_weights=os.path.join(model_dir,"craft.h5")
+                craft_weights=os.path.join(model_dir,'det',"craft.h5")
                 self.det=CRAFT(craft_weights)
                 
                 LOG_INFO("Detector Loaded")    
@@ -81,8 +90,7 @@ class OCR(object):
                 LOG_INFO("Recognizer Loaded")
                 texts=self.rec.recognize(dummy_img,dummy_boxes,
                                         batch_size=32,
-                                        infer_len=10,
-                                        word_process_func=None)
+                                        infer_len=10)
                 if len(texts)>0:
                     LOG_INFO("Recognizer Initialized")
 
@@ -123,18 +131,17 @@ class OCR(object):
         if return_dict:
             return {"match":match,"similiarity":similiarity_value}
 
-    def detect_boxes(self,img,det_thresh=0.4,text_thresh=0.7,shift_x_max=0):
+    def detect_boxes(self,img,det_thresh=0.4,text_thresh=0.7):
         '''
             detection wrapper
             args:
                 img         : the np.array format image to run detction on
                 det_thresh  : detection threshold to use
                 text_thresh : threshold for text data
-                shift_x_max : pixels to shift x max  
             returns:
                 boxes   :   returns boxes that contains text region
         '''
-        boxes=self.det.detect(img,det_thresh=det_thresh,text_thresh=text_thresh,shift_x_max=shift_x_max)
+        boxes=self.det.detect(img,det_thresh=det_thresh,text_thresh=text_thresh)
         return boxes
     
     def process_boxes(self,text_boxes,region_dict):
@@ -176,19 +183,18 @@ class OCR(object):
 
     
 
-    def extract(self,img,batch_size=32,shift_x_max=5,word_process_func=None):
+    def extract(self,img,batch_size=32):
         '''
             predict based on datatype
             args:
                 img                 :   image to infer on
-                card_type           :   nid/smart card
                 batch_size          :   batch size for inference
-                word_process_func   :   function to process the word images
-                shift_x_max         :   shifting x values
         '''
         # process if path is provided
         if type(img)==str:
             img=cv2.imread(img)
+            org=np.copy(img)
+           
         # dims
         img=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
         
@@ -201,31 +207,34 @@ class OCR(object):
             src=card.smart.front
             two_step_recog=False
         
+        # locator
+        img=self.locator.process(org)
+        
         # face and sign
-        img=cv2.resize(img,(card.width,card.height))
+        ref=cv2.resize(img,(card.width,card.height))
         x1,y1,x2,y2=src.face
-        face=img[y1:y2,x1:x2]
+        face=ref[y1:y2,x1:x2]
         x1,y1,x2,y2=src.sign
-        sign=img[y1:y2,x1:x2]
-        img= cv2.fastNlMeansDenoisingColored(img,None,10,10,7,21)
+        sign=ref[y1:y2,x1:x2]
+        
         # boxes
-        text_boxes=self.detect_boxes(img,shift_x_max=shift_x_max)
+        text_boxes=self.detect_boxes(img)
         box_dict,df=self.process_boxes(text_boxes,src.box_dict)
-        img=enhanceImage(img)
-        img=remove_shadows(img)
+        print(box_dict)
+        
         # recognition
         if two_step_recog:
             boxes=[]
             for k,v in box_dict.items():
                 if k!="ID No.":
                     boxes+=v
-            texts=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=10,word_process_func=word_process_func)
+            texts=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=10)
             #nid
             boxes=box_dict["ID No."]
-            texts+=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=20,word_process_func=word_process_func)
+            texts+=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=20)
         else:
             boxes=df.box.tolist()
-            texts=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=10,word_process_func=word_process_func)
+            texts=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=10)
         
         response={}
         response["card_type"]=card_type
