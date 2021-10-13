@@ -130,16 +130,12 @@ def enhanceImage(img):
         enhances an image based on contrast
     '''
     img=Image.fromarray(img)
-    if random_exec(weights=[0.5,0.5]):
-        # color
-        factor=random.randint(1,5)
-        col_enhancer = ImageEnhance.Color(img)
-        img= col_enhancer.enhance(factor)
-    if random_exec(weights=[0.5,0.5]):
-        # contrast
-        factor=random.randint(1,3)
-        con_enhancer = ImageEnhance.Contrast(img)
-        img= con_enhancer.enhance(factor)
+    # color
+    col_enhancer = ImageEnhance.Color(img)
+    img= col_enhancer.enhance(2)
+    # contrast
+    con_enhancer = ImageEnhance.Contrast(img)
+    img= con_enhancer.enhance(2)
     img=np.array(img)
     return img
 #--------------
