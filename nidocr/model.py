@@ -18,6 +18,7 @@ from .classification import Classifier
 from deepface import DeepFace
 from .data import card
 from .locator import Locator
+from paddleocr import PaddleOCR
 #-------------------------
 # class
 #------------------------
@@ -28,7 +29,7 @@ class OCR(object):
                 use_classifier=True,
                 use_locator=True,
                 use_detector=True,
-                use_recognizer=True,
+                use_recognizer=False,
                 use_facematcher=False):
         '''
             Instantiates an ocr model:
@@ -106,7 +107,7 @@ class OCR(object):
             except Exception as e:
                 LOG_INFO(f"EXECUTION EXCEPTION: {e}",mcolor="red")
 
-
+        self.engocr = PaddleOCR(use_angle_cls=True, lang='en',use_gpu=False) 
 
     def facematcher(self,src_img,dest_img,return_dict=False):
         '''
@@ -213,10 +214,10 @@ class OCR(object):
         
         if card_type=="nid": 
             src=card.nid.front
-            two_step_recog=True
+            #two_step_recog=True
         else: 
             src=card.smart.front
-            two_step_recog=False
+            #two_step_recog=False
         
         # locator
         img=self.locator.process(org)
@@ -238,6 +239,8 @@ class OCR(object):
         print(box_dict)
         
         # recognition
+        eng_keys=["English Name","Date of Birth","ID No."]
+        '''
         if two_step_recog:
             boxes=[]
             for k,v in box_dict.items():
@@ -251,6 +254,23 @@ class OCR(object):
             boxes=df.box.tolist()
             texts=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=10)
         
+        '''
+        texts=[]
+        for k,v in box_dict.items():
+            if k in eng_keys:
+                for box in v:
+                    # crop    
+                    x_min,y_min,x_max,y_max=box
+                    word=img[y_min:y_max,x_min:x_max] 
+                    result = self.engocr.ocr(word, cls=True,det=False,rec=True)
+                    # find data
+                    for line in result:
+                        texts.append(line[0])
+                
+            else:
+                for box in v:
+                    texts.append("bangla")
+
         response={}
         response["card_type"]=card_type
         df["text"]=texts
