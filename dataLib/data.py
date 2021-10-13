@@ -381,7 +381,7 @@ class Data(object):
             
         return template,template_mask,template_label
     
-    def backgroundGenerator(self,dim=(1024,1024)):
+    def backgroundGenerator(self,dim=(1024,1024),_type=None):
         '''
         generates random background
         args:
@@ -391,7 +391,8 @@ class Data(object):
         # collect image paths
         _paths=self.source.noise.backs
         while True:
-            _type=random.choice(["single","double","comb"])
+            if _type is None:
+                _type=random.choice(["single","double","comb"])
             if _type=="single":
                 img=cv2.imread(random.choice(_paths))
                 yield img

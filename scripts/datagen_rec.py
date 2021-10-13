@@ -30,7 +30,7 @@ def main(args):
     data_csv =os.path.join(save_dir,"data.csv")
     gen_scene=args.pure_scene_text
     src=Data(src_dir)
-    backgen=src.backgroundGenerator()
+    backgen=src.backgroundGenerator(dim=(256,256))
     LOG_INFO(save_dir)
     # data division
     card_img_dir =os.path.join(card_dir,"images")
@@ -56,9 +56,10 @@ def main(args):
                 card_text=src.card.nid.front.text
             else:
                 card_text=src.card.smart.front.text
-            # image    
-            img=cv2.imread(img_path)
-            img=remove_shadows(img)
+            if not gen_scene:
+                # image    
+                img=cv2.imread(img_path)
+                img=remove_shadows(img)
             # mask
             mask=cv2.imread(mask_path,0)
             
