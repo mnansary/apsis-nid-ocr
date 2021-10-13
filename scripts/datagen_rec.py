@@ -22,6 +22,7 @@ tqdm.pandas()
 
 def main(args):
     #-----------------
+    aug=Modifier(use_gaussnoise=True,use_bifilter=True)
     card_dir=args.card_dir
     src_dir =args.src_dir
     save_dir=args.save_dir
@@ -80,6 +81,7 @@ def main(args):
                         h,w=word_mask.shape
                         word_img=cv2.resize(word_img,(w,h))
                         word_img[word_mask>0]=randColor()
+                        word_img=aug.noise(word_img)
                     else:
                         word_img=img[y_min:y_max,x_min:x_max]
                     

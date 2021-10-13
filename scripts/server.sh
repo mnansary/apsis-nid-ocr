@@ -1,6 +1,6 @@
 #!/bin/sh
-save_path="/home/apsisdev/ansary/DATASETS/APSIS/NID/"
-#save_path="/media/ansary/DriveData/Work/APSIS/datasets/NID/"
+#save_path="/home/apsisdev/ansary/DATASETS/APSIS/NID/"
+save_path="/media/ansary/DriveData/Work/APSIS/datasets/NID/"
 #-----------------------------------------------------------------------------------------------
 src_path="${save_path}source/"
 card_path="${save_path}cards/"
