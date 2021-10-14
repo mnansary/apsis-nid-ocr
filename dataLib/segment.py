@@ -120,7 +120,7 @@ def get_warped_image(img,mask,src,config,warp_type):
     mask= cv2.warpPerspective(mask, M, (width,height),flags=cv2.INTER_NEAREST)
     return img,mask,dst
 #---------------------------------------------------------------------------------------
-def augment_img_base(img_path,config):
+def augment_img_base(img_path,config,cor=32):
     '''
         augments a base image:
         args:
@@ -140,8 +140,9 @@ def augment_img_base(img_path,config):
     height,width,d=img.shape
     warp_types=[{"p1-p2":width},{"p2-p3":height},{"p3-p4":width},{"p4-p1":height}]
     
-    mask=np.ones((height,width))*255
+    mask=np.ones((height,width))*200
     mask=mask.astype("uint8")
+    mask[cor:height-cor,cor:width-cor]=100
     
     curr_coord=[[0,0], 
                 [width-1,0], 
@@ -237,4 +238,7 @@ def render_data(backgen,img_path,config):
         coord=np.array(coord)
 
     back[mask>0]=img[mask>0]
+    mask=mask/100
+    mask=mask.astype("uint8")
+    print(np.unique(mask))
     return back,mask,coord
