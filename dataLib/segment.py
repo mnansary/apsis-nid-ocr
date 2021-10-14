@@ -240,5 +240,4 @@ def render_data(backgen,img_path,config):
     back[mask>0]=img[mask>0]
     mask=mask/100
     mask=mask.astype("uint8")
-    print(np.unique(mask))
     return back,mask,coord
