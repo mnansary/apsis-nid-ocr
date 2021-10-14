@@ -46,7 +46,9 @@ $(document).ready(function () {
                 // Get and display the result
                 $('.loader').hide();
                 $('#result').fadeIn(600);
-                $('#result').text(' Result:  ' + data);
+                $.each(data, function(i,v){
+                $('#result').append('<p>'+ i + ': ' + v +'</p>');
+                });
                 console.log('Success!');
             },
         });
