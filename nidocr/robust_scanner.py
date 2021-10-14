@@ -78,7 +78,7 @@ class RobustScanner(object):
         #------------------
         self.img_height  =  64
         self.img_width   =  512
-        self.nb_channels =  3
+        self.nb_channels =  1
         self.pos_max     =  40          
         self.enc_filters =  256
         self.factor      =  32
@@ -220,8 +220,6 @@ class RobustScanner(object):
         masks=[]
         poss=[]
         h,w=img.shape[0],img.shape[1]
-        plt.imshow(img)
-        plt.show()
             
         for box in tqdm(boxes):
             # crop    
@@ -229,8 +227,8 @@ class RobustScanner(object):
             word=img[y_min:y_max,x_min:x_max] 
             # word
             word,vmask=padWords(word,(self.img_height,self.img_width),ptype="left")
-            plt.imshow(word)
-            plt.show()
+            word=cv2.cvtColor(word,cv2.COLOR_BGR2GRAY)
+            word=np.expand_dims(word,axis=-1) 
             word=np.expand_dims(word,axis=0) 
             # image
             images.append(word)

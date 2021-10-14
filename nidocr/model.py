@@ -13,7 +13,7 @@ from .utils import *
 import pandas as pd
 import matplotlib.pyplot as plt
 from .detector import CRAFT
-from .recogonizer import RobustScanner
+from .robust_scanner import RobustScanner
 from .classification import Classifier
 from deepface import DeepFace
 from .data import card
@@ -24,24 +24,12 @@ from paddleocr import PaddleOCR
 #------------------------
 
 class OCR(object):
-    def __init__(self,
-                model_dir,
-                use_classifier=True,
-                use_locator=True,
-                use_detector=True,
-                use_recognizer=False,
-                use_facematcher=False):
+    def __init__(self,model_dir,use_facematcher=False):
         '''
             Instantiates an ocr model:
-                methods:
-                detect_boxes    :   runs detector and returns boxes where text exists
-                process_boxes   :   processes regional bboxes
-
             args:
                 model_dir               :   path of the model weights
-                use_detector            :   flag for loading detector model
-                use_recognizer          :   flag for loading recognizer model
-                use_facematcher         :   flag for loading facematcher model
+                use_facematcher         :   loading facematcher
         '''
         
         # nid dummy image
@@ -50,54 +38,55 @@ class OCR(object):
         dummy_boxes=[]
         for _,v in card.nid.front.box_dict.items():
             dummy_boxes.append(v)
+        # classifier weight loading and initialization
+        try:
+            ext_weights=os.path.join(model_dir,"cls","classifier.h5")
+            self.classifier=Classifier(ext_weights)
+            LOG_INFO("Classifier Loaded")    
+            card_type=self.classifier.process(cv2.cvtColor(dummy_img,cv2.COLOR_BGR2RGB))
+            if card_type=="nid":
+                LOG_INFO("Classifier Initialized")
+        except Exception as e:
+            LOG_INFO(f"EXECUTION EXCEPTION: {e}",mcolor="red")
         
-        if use_classifier:
-            try:
-                ext_weights=os.path.join(model_dir,"cls","classifier.h5")
-                self.classifier=Classifier(ext_weights)
-                LOG_INFO("Classifier Loaded")    
-                card_type=self.classifier.process(cv2.cvtColor(dummy_img,cv2.COLOR_BGR2RGB))
-                if card_type=="nid":
-                    LOG_INFO("Classifier Initialized")
-            except Exception as e:
-                LOG_INFO(f"EXECUTION EXCEPTION: {e}",mcolor="red")
-            
-        if use_locator:
-            try:
-                self.locator=Locator(weights_path=model_dir)
-                LOG_INFO("Locator Loaded")    
-                ref=self.locator.process(cv2.cvtColor(dummy_img,cv2.COLOR_BGR2RGB))
-                LOG_INFO("Locator Initialized")
-            except Exception as e:
-                LOG_INFO(f"EXECUTION EXCEPTION: {e}",mcolor="red")
+        # locator weight loading and initialization
+        try:
+            self.locator=Locator(weights_path=model_dir)
+            LOG_INFO("Locator Loaded")    
+            ref=self.locator.process(cv2.cvtColor(dummy_img,cv2.COLOR_BGR2RGB))
+            LOG_INFO("Locator Initialized")
+        except Exception as e:
+            LOG_INFO(f"EXECUTION EXCEPTION: {e}",mcolor="red")
 
         # detector weight loading and initialization
-        if use_detector:
-            try:
-                craft_weights=os.path.join(model_dir,'det',"craft.h5")
-                self.det=CRAFT(craft_weights)
-                
-                LOG_INFO("Detector Loaded")    
-                boxes=self.det.detect(dummy_img)
-                if len(boxes)>0:
-                    LOG_INFO("Detector Initialized")
-            except Exception as e:
-                LOG_INFO(f"EXECUTION EXCEPTION: {e}",mcolor="red")
+        try:
+            craft_weights=os.path.join(model_dir,'det',"craft.h5")
+            self.det=CRAFT(craft_weights)
+            
+            LOG_INFO("Detector Loaded")    
+            boxes=self.det.detect(dummy_img)
+            if len(boxes)>0:
+                LOG_INFO("Detector Initialized")
+        except Exception as e:
+            LOG_INFO(f"EXECUTION EXCEPTION: {e}",mcolor="red")
             
 
         # recognizer weight loading and initialization
-        if use_recognizer:
-            try:
-                self.rec=RobustScanner(model_dir)
-                LOG_INFO("Recognizer Loaded")
-                texts=self.rec.recognize(dummy_img,dummy_boxes,
-                                        batch_size=32,
-                                        infer_len=10)
-                if len(texts)>0:
-                    LOG_INFO("Recognizer Initialized")
+        try:
+            self.engocr = PaddleOCR(use_angle_cls=True, lang='en',use_gpu=False) 
+            self.rec=RobustScanner(model_dir)
+            LOG_INFO("Recognizer Loaded")
+            texts=self.rec.recognize(dummy_img,dummy_boxes,
+                                    batch_size=32,
+                                    infer_len=10)
+            if len(texts)>0:
+                LOG_INFO("Recognizer Initialized")
 
-            except Exception as e:
-                LOG_INFO(f"EXECUTION EXCEPTION: {e}",mcolor="red")
+        except Exception as e:
+            LOG_INFO(f"EXECUTION EXCEPTION: {e}",mcolor="red")
+
+
+        
         # facematcher loading and initialization
         if use_facematcher:
             try:
@@ -107,7 +96,7 @@ class OCR(object):
             except Exception as e:
                 LOG_INFO(f"EXECUTION EXCEPTION: {e}",mcolor="red")
 
-        self.engocr = PaddleOCR(use_angle_cls=True, lang='en',use_gpu=False) 
+        
 
     def facematcher(self,src_img,dest_img,return_dict=False):
         '''
@@ -214,11 +203,9 @@ class OCR(object):
         
         if card_type=="nid": 
             src=card.nid.front
-            #two_step_recog=True
         else: 
             src=card.smart.front
-            #two_step_recog=False
-        
+            
         # locator
         img=self.locator.process(org)
         
@@ -236,25 +223,9 @@ class OCR(object):
         # boxes
         text_boxes=self.detect_boxes(img)
         box_dict,df=self.process_boxes(text_boxes,src.box_dict,rx,ry)
-        print(box_dict)
         
         # recognition
         eng_keys=["English Name","Date of Birth","ID No."]
-        '''
-        if two_step_recog:
-            boxes=[]
-            for k,v in box_dict.items():
-                if k!="ID No.":
-                    boxes+=v
-            texts=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=10)
-            #nid
-            boxes=box_dict["ID No."]
-            texts+=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=20)
-        else:
-            boxes=df.box.tolist()
-            texts=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=10)
-        
-        '''
         texts=[]
         for k,v in box_dict.items():
             if k in eng_keys:
@@ -268,8 +239,10 @@ class OCR(object):
                         texts.append(line[0])
                 
             else:
+                boxes=[]
                 for box in v:
-                    texts.append("bangla")
+                    boxes+=v
+                    texts+=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=20)
 
         response={}
         response["card_type"]=card_type
