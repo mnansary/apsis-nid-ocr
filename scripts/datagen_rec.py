@@ -48,7 +48,6 @@ def main(args):
     img_count=0
     dicts=[]
     # remove later
-    df=df.sample(frac=1)
     df=df[:10000]
 
     for didx in tqdm(range(len(df))):
