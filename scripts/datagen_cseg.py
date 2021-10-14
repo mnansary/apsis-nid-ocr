@@ -67,11 +67,6 @@ def main(args):
                 img_path =data_df.iloc[idx,0]
                 card_type=data_df.iloc[idx,1]
                 img,mask,base=render_data(backgen,img_path,src.config)
-                # image
-                img=remove_shadows(img)
-                # mask
-                seg=np.copy(img)
-                seg[mask==0]=(0,0,0)
                 # coord
                 base=base.astype("float32")
                 h,w,_=img.shape
@@ -86,7 +81,7 @@ def main(args):
                     coord.append([int(x),int(y)])
                 # save
                 img=cv2.resize(img,(data_dim,data_dim))
-                mask=cv2.resize(seg,(data_dim,data_dim))
+                mask=cv2.resize(mask,(data_dim,data_dim))
                 
                 cv2.imwrite(os.path.join(img_dir,f"{card_type}_{idx}.png"),img)
                 cv2.imwrite(os.path.join(mask_dir,f"{card_type}_{idx}.png"),mask)

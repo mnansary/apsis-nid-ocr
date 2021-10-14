@@ -14,7 +14,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from .detector import CRAFT
 from .robust_scanner import RobustScanner
-from .crnn import Recognizer
 from .classification import Classifier
 from deepface import DeepFace
 from .data import card
@@ -25,7 +24,7 @@ from paddleocr import PaddleOCR
 #------------------------
 
 class OCR(object):
-    def __init__(self,model_dir,use_facematcher=False,use_robustScanner=True):
+    def __init__(self,model_dir,use_facematcher=False):
         '''
             Instantiates an ocr model:
             args:
@@ -77,31 +76,17 @@ class OCR(object):
 
         # recognizer weight loading and initialization
         self.engocr = PaddleOCR(use_angle_cls=True, lang='en',use_gpu=False) 
-        if use_robustScanner:
-            self.bnocr="rs"
-            try:
-                self.rec=RobustScanner(model_dir)
-                LOG_INFO("Recognizer Loaded")
-                texts=self.rec.recognize(dummy_img,dummy_boxes,
-                                        batch_size=32,
-                                        infer_len=10)
-                if len(texts)>0:
-                    LOG_INFO("Recognizer Initialized")
+        try:
+            self.rec=RobustScanner(model_dir)
+            LOG_INFO("Recognizer Loaded")
+            texts=self.rec.recognize(dummy_img,dummy_boxes,
+                                    batch_size=32,
+                                    infer_len=10)
+            if len(texts)>0:
+                LOG_INFO("Recognizer Initialized")
 
-            except Exception as e:
-                LOG_INFO(f"EXECUTION EXCEPTION: {e}",mcolor="red")
-        else:
-            self.bnocr="crnn"
-            try:
-                self.rec=Recognizer(model_dir)
-                LOG_INFO("Recognizer Loaded")
-                texts=self.rec.recognize(dummy_img,dummy_boxes)
-                if len(texts)>0:
-                    LOG_INFO("Recognizer Initialized")
-
-            except Exception as e:
-                LOG_INFO(f"EXECUTION EXCEPTION: {e}",mcolor="red")
-
+        except Exception as e:
+            LOG_INFO(f"EXECUTION EXCEPTION: {e}",mcolor="red")
         
         # facematcher loading and initialization
         if use_facematcher:
@@ -267,11 +252,8 @@ class OCR(object):
                         texts.append(line[0])
                 
             else:
-                if self.bnocr=="rs":
-                    texts+=self.rec.recognize(img,v,batch_size=batch_size,infer_len=20)
-                else:
-                    texts+=self.rec.recognize(img,v)
-        
+                texts+=self.rec.recognize(img,v,batch_size=batch_size,infer_len=20)
+                
         response={}
         response["card_type"]=card_type
         df["text"]=texts
