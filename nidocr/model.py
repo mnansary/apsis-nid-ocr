@@ -239,10 +239,8 @@ class OCR(object):
                         texts.append(line[0])
                 
             else:
-                boxes=[]
-                for box in v:
-                    boxes+=v
-                    texts+=self.rec.recognize(img,boxes,batch_size=batch_size,infer_len=20)
+                texts+=self.rec.recognize(img,v,batch_size=batch_size,infer_len=20)
+        print(texts)
 
         response={}
         response["card_type"]=card_type

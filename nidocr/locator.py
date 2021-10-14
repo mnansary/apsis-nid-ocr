@@ -58,8 +58,6 @@ class Locator(object):
         img=np.expand_dims(img,axis=0)
         # predict
         seg=self.seg.predict(img)
-        plt.imshow(np.squeeze(seg))
-        plt.show()
         
         pts=self.cor.predict(seg)[0]
         # coords
