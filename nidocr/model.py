@@ -251,7 +251,7 @@ class OCR(object):
         # boxes
         text_boxes=self.detect_boxes(img,debug=debug)
         box_dict,df=self.process_boxes(text_boxes,src.box_dict,rx,ry)
-        
+        img=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
         # recognition
         eng_keys=["English Name","Date of Birth","ID No."]
         texts=[]
