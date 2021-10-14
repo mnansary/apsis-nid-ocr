@@ -120,7 +120,7 @@ def get_warped_image(img,mask,src,config,warp_type):
     mask= cv2.warpPerspective(mask, M, (width,height),flags=cv2.INTER_NEAREST)
     return img,mask,dst
 #---------------------------------------------------------------------------------------
-def augment_img_base(img_path,config,cor=32):
+def augment_img_base(img_path,config):
     '''
         augments a base image:
         args:
@@ -140,10 +140,17 @@ def augment_img_base(img_path,config,cor=32):
     height,width,d=img.shape
     warp_types=[{"p1-p2":width},{"p2-p3":height},{"p3-p4":width},{"p4-p1":height}]
     
-    mask=np.ones((height,width))*200
-    mask=mask.astype("uint8")
-    mask[cor:height-cor,cor:width-cor]=100
-    
+    mask_path=img_path.replace("images","masks")
+    mask=cv2.imread(mask_path,0)
+    mask[mask>0]=1
+    mask[mask<1]=2
+    for k,v in card.front.items():
+        if k in [1,2]:
+            x_min,y_min,x_max,y_max=v
+            mask[y_min:y_max,x_min:x_max]=k+2
+    mask=mask*25
+    mask=mask.astype("uint8") 
+        
     curr_coord=[[0,0], 
                 [width-1,0], 
                 [width-1,height-1], 
@@ -238,6 +245,6 @@ def render_data(backgen,img_path,config):
         coord=np.array(coord)
 
     back[mask>0]=img[mask>0]
-    mask=mask/100
+    mask=mask/25
     mask=mask.astype("uint8")
     return back,mask,coord
