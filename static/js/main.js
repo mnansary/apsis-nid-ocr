@@ -37,11 +37,12 @@ $(document).ready(function () {
             type: 'POST',
             url: '/predict',
             data: form_data,
-            contentType: false,
             cache: false,
             processData: false,
             async: true,
+            contentType:false,
             success: function (data) {
+                console.log(data)
                 // Get and display the result
                 $('.loader').hide();
                 $('#result').fadeIn(600);

@@ -25,7 +25,7 @@ from paddleocr import PaddleOCR
 #------------------------
 
 class OCR(object):
-    def __init__(self,model_dir,use_facematcher=False,use_robustScanner=False):
+    def __init__(self,model_dir,use_facematcher=False,use_robustScanner=True):
         '''
             Instantiates an ocr model:
             args:
@@ -138,7 +138,7 @@ class OCR(object):
         if return_dict:
             return {"match":match,"similiarity":similiarity_value}
 
-    def detect_boxes(self,img,det_thresh=0.4,text_thresh=0.7):
+    def detect_boxes(self,img,det_thresh=0.4,text_thresh=0.7,debug=False):
         '''
             detection wrapper
             args:
@@ -148,7 +148,7 @@ class OCR(object):
             returns:
                 boxes   :   returns boxes that contains text region
         '''
-        boxes=self.det.detect(img,det_thresh=det_thresh,text_thresh=text_thresh)
+        boxes=self.det.detect(img,det_thresh=det_thresh,text_thresh=text_thresh,debug=debug)
         return boxes
     
     def process_boxes(self,text_boxes,region_dict,rx,ry):
@@ -176,12 +176,11 @@ class OCR(object):
                               int(math.ceil(x2*rx)),
                               int(math.ceil(y2*ry))])
         # sort boxed
-        data=pd.DataFrame({"box":ref_boxes})
+        data=pd.DataFrame({"box":text_boxes,"ref_box":ref_boxes})
         # detect field
-        data["field"]=data.box.apply(lambda x:localize_box(x,region_boxes))
+        data["field"]=data.ref_box.apply(lambda x:localize_box(x,region_boxes))
         data.dropna(inplace=True) 
         data["field"]=data["field"].apply(lambda x:region_fields[int(x)])
-        data["box"]=text_boxes
         box_dict={}
         df_box=[]
         df_field=[]
@@ -200,7 +199,7 @@ class OCR(object):
 
     
 
-    def extract(self,img,batch_size=32):
+    def extract(self,img,batch_size=32,debug=False):
         '''
             predict based on datatype
             args:
@@ -224,20 +223,33 @@ class OCR(object):
             
         # locator
         img=self.locator.process(org)
-        
+        if debug:
+            plt.imshow(img)
+            plt.show()
         # face and sign
         ref=cv2.resize(img,(card.width,card.height))
+        
         x1,y1,x2,y2=src.face
         face=ref[y1:y2,x1:x2]
         x1,y1,x2,y2=src.sign
         sign=ref[y1:y2,x1:x2]
+        if debug:
+            plt.imshow(ref)
+            plt.show()
+            plt.imshow(face)
+            plt.show()
+            plt.imshow(sign)
+            plt.show()
+        
+        
+        
         # ratio
         ho,wo,d=img.shape
         hr,wr,d=ref.shape
         rx=wr/wo
         ry=hr/ho
         # boxes
-        text_boxes=self.detect_boxes(img)
+        text_boxes=self.detect_boxes(img,debug=debug)
         box_dict,df=self.process_boxes(text_boxes,src.box_dict,rx,ry)
         
         # recognition
@@ -265,7 +277,14 @@ class OCR(object):
         df["text"]=texts
         for field in df.field.unique():
             tdf=df.loc[df.field==field]
-            response[field]=" ".join(tdf.text.tolist())
+            if field=="ID No." and card_type=="nid":
+                response[field]="".join(tdf.text.tolist())
+            else:
+                response[field]=" ".join(tdf.text.tolist())
+            if field in eng_keys and card_type=="smart":
+                response[field]=response[field].upper()
+
+            
         response["image"]=img2base64(face)
         response["sign"]=img2base64(sign)
         

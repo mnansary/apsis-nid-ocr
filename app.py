@@ -50,7 +50,7 @@ def upload():
         file_path = os.path.join(basepath,"tests",'uploads', secure_filename(f.filename))
         f.save(file_path)
 
-        response=ocr.extract(file_path,shift_x_max=0)
+        response=ocr.extract(file_path)
         return jsonify(response)
     return None
 

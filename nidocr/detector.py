@@ -38,7 +38,7 @@ class CRAFT(BaseDetector):
         super().__init__(model_weights, img_dim, data_channel, backbone=backbone)
         LOG_INFO("Loaded Detection Model,craft",mcolor="green")
     
-    def detect(self,img,det_thresh=0.4,text_thresh=0.7):
+    def detect(self,img,det_thresh=0.4,text_thresh=0.7,debug=False):
         '''
         detects words from an image
         args:
@@ -68,6 +68,9 @@ class CRAFT(BaseDetector):
                                     maxval=1,
                                     type=cv2.THRESH_BINARY)
         n_components, labels, stats, _ = cv2.connectedComponentsWithStats(np.clip(text_score + link_score, 0, 1).astype('uint8'),connectivity=4)
+        if debug:
+            plt.imshow(labels)
+            plt.show()
         boxes = []
         for component_id in range(1, n_components):
             # Filter by size

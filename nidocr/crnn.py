@@ -3,6 +3,9 @@
 @author:MD.Nazmuddoha Ansary
 """
 from __future__ import print_function
+'''
+UNSTABLE:
+'''
 #----------------
 # imports
 #---------------
@@ -18,6 +21,8 @@ import torch.utils.data
 import torch.nn.functional as F
 import torchvision.transforms as transforms
 from collections import OrderedDict
+import cv2
+import matplotlib.pyplot as plt
 #--------------------------------------------------------------------------------------------------------
 # blocks
 #--------------------------------------------------------------------------------------------------------
@@ -386,19 +391,18 @@ class Recognizer(object):
             new_state_dict[new_key] = value
         self.model=CRNN()
         self.model.load_state_dict(new_state_dict)
-        try:
-            torch.quantization.quantize_dynamic(self.model, dtype=torch.qint8, inplace=True)
-        except:
-            pass
-        self.model.eval()
         # converter
         self.converter=CTCLabelConverter(characters,dict_pathlist={"bn":dict_path})
     def recognize(self,img,bboxes,device="cpu"):
+        gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
         img_list=[]
         for box in bboxes:
             # crop    
             x_min,y_min,x_max,y_max=box
-            word=img[y_min:y_max,x_min:x_max] 
+            word=gray[y_min:y_max,x_min:x_max] 
+            plt.imshow(word)
+            plt.show()
+            img_list.append(word)
         AlignCollate_normal = AlignCollate(imgH=self.imgH, imgW=self.imgW, keep_ratio_with_pad=True)
         test_data = ListDataset(img_list)
         test_loader = torch.utils.data.DataLoader(test_data, 
@@ -407,14 +411,18 @@ class Recognizer(object):
                                                   num_workers=1, 
                                                   collate_fn=AlignCollate_normal, 
                                                   pin_memory=True)
+        self.model.eval()
         result = []
         with torch.no_grad():
             for image_tensors in test_loader:
                 batch_size = image_tensors.size(0)
                 image = image_tensors.to(device)
                 preds = self.model(image)
+                print(preds)
                 # Select max probabilty (greedy decoding) then decode index to character
                 preds_size = torch.IntTensor([preds.size(1)] * batch_size)
+                print(preds_size)
+                
                 preds_prob = F.softmax(preds, dim=2)
                 preds_prob = preds_prob.cpu().detach().numpy()
                 pred_norm = preds_prob.sum(axis=2)
@@ -425,4 +433,5 @@ class Recognizer(object):
                 preds_index = preds_index.view(-1)
                 preds_str = self.converter.decode_greedy(preds_index.data.cpu().detach().numpy(), preds_size.data)
                 result.append(preds_str)
+                
         return result
