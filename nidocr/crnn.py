@@ -297,6 +297,78 @@ class AlignCollate(object):
 
         image_tensors = torch.cat([t.unsqueeze(0) for t in resized_images], 0)
         return image_tensors
+#-------------------------------------------------------------------------------------------------------
+class CTCLabelConverter(object):
+    """ Convert between text-label and text-index """
+
+    def __init__(self, character, separator_list = {}, dict_pathlist = {}):
+        # character (str): set of the possible characters.
+        dict_character = list(character)
+
+        self.dict = {}
+        for i, char in enumerate(dict_character):
+            self.dict[char] = i + 1
+
+        self.character = ['[blank]'] + dict_character  # dummy '[blank]' token for CTCLoss (index 0)
+
+        self.separator_list = separator_list
+        separator_char = []
+        for lang, sep in separator_list.items():
+            separator_char += sep
+        self.ignore_idx = [0] + [i+1 for i,item in enumerate(separator_char)]
+
+        ####### latin dict
+        if len(separator_list) == 0:
+            dict_list = []
+            for lang, dict_path in dict_pathlist.items():
+                try:
+                    with open(dict_path, "r", encoding = "utf-8-sig") as input_file:
+                        word_count =  input_file.read().splitlines()
+                    dict_list += word_count
+                except:
+                    pass
+        else:
+            dict_list = {}
+            for lang, dict_path in dict_pathlist.items():
+                with open(dict_path, "r", encoding = "utf-8-sig") as input_file:
+                    word_count =  input_file.read().splitlines()
+                dict_list[lang] = word_count
+
+        self.dict_list = dict_list
+
+    def encode(self, text, batch_max_length=25):
+        """convert text-label into text-index.
+        input:
+            text: text labels of each image. [batch_size]
+        output:
+            text: concatenated text index for CTCLoss.
+                    [sum(text_lengths)] = [text_index_0 + text_index_1 + ... + text_index_(n - 1)]
+            length: length of each text. [batch_size]
+        """
+        length = [len(s) for s in text]
+        text = ''.join(text)
+        text = [self.dict[char] for char in text]
+
+        return (torch.IntTensor(text), torch.IntTensor(length))
+
+    def decode_greedy(self, text_index, length):
+        """ convert text-index into text-label. """
+        texts = []
+        index = 0
+        for l in length:
+            t = text_index[index:index + l]
+            # Returns a boolean array where true is when the value is not repeated
+            a = np.insert(~((t[1:]==t[:-1])),0,True)
+            # Returns a boolean array where true is when the value is not in the ignore_idx list
+            b = ~np.isin(t,np.array(self.ignore_idx))
+            # Combine the two boolean array
+            c = a & b
+            # Gets the corresponding character according to the saved indexes
+            text = ''.join(np.array(self.character)[t[c.nonzero()]])
+            texts.append(text)
+            index += l
+        return texts
+
 
 #--------------------------------------------------------------------------------------------------------
 class Recognizer(object):
@@ -314,9 +386,14 @@ class Recognizer(object):
             new_state_dict[new_key] = value
         self.model=CRNN()
         self.model.load_state_dict(new_state_dict)
+        try:
+            torch.quantization.quantize_dynamic(self.model, dtype=torch.qint8, inplace=True)
+        except:
+            pass
+        self.model.eval()
         # converter
-
-    def process_image(self,img,bboxes):
+        self.converter=CTCLabelConverter(characters,dict_pathlist={"bn":dict_path})
+    def recognize(self,img,bboxes,device="cpu"):
         img_list=[]
         for box in bboxes:
             # crop    
@@ -330,3 +407,22 @@ class Recognizer(object):
                                                   num_workers=1, 
                                                   collate_fn=AlignCollate_normal, 
                                                   pin_memory=True)
+        result = []
+        with torch.no_grad():
+            for image_tensors in test_loader:
+                batch_size = image_tensors.size(0)
+                image = image_tensors.to(device)
+                preds = self.model(image)
+                # Select max probabilty (greedy decoding) then decode index to character
+                preds_size = torch.IntTensor([preds.size(1)] * batch_size)
+                preds_prob = F.softmax(preds, dim=2)
+                preds_prob = preds_prob.cpu().detach().numpy()
+                pred_norm = preds_prob.sum(axis=2)
+                preds_prob = preds_prob/np.expand_dims(pred_norm, axis=-1)
+                preds_prob = torch.from_numpy(preds_prob).float().to(device)
+                # Select max probabilty (greedy decoding) then decode index to character
+                _, preds_index = preds_prob.max(2)
+                preds_index = preds_index.view(-1)
+                preds_str = self.converter.decode_greedy(preds_index.data.cpu().detach().numpy(), preds_size.data)
+                result.append(preds_str)
+        return result
