@@ -154,15 +154,20 @@ def enhanceImage(img):
     return img
 
 #---------------------------------------------------------------
-def padDetectionImage(img):
+def padDetectionImage(img,gray=False):
     cfg={}
-        
-    h,w,d=img.shape
+    if gray:
+        h,w=img.shape
+    else:
+        h,w,d=img.shape
     if h>w:
         # pad widths
         pad_width =h-w
         # pads
-        pad =np.ones((h,pad_width,d))*255
+        if gray:
+            pad =np.zeros((h,pad_width))
+        else:    
+            pad =np.ones((h,pad_width,d))*255
         # pad
         img =np.concatenate([img,pad],axis=1)
         # cfg
@@ -173,7 +178,10 @@ def padDetectionImage(img):
         # pad height
         pad_height =w-h
         # pads
-        pad =np.ones((pad_height,w,d))*255
+        if gray:
+            pad=np.zeros((pad_height,w))
+        else:
+            pad =np.ones((pad_height,w,d))*255
         # pad
         img =np.concatenate([img,pad],axis=0)
         # cfg
@@ -181,7 +189,9 @@ def padDetectionImage(img):
         cfg["dim"]=h
     else:
         cfg=None
-    return img.astype("uint8"),cfg
+    if not gray:
+        img=img.astype("uint8")
+    return img,cfg
 
 #---------------------------------------------------------------
 def padToFixedHeightWidth(img,h_max,w_max):

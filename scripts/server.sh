@@ -1,6 +1,6 @@
 #!/bin/sh
 save_path="/home/apsisdev/ansary/DATASETS/APSIS/NID/"
-#save_path="/media/ansary/DriveData/Work/APSIS/datasets/NID/"
+save_path="/media/ansary/DriveData/Work/APSIS/datasets/NID/"
 #-----------------------------------------------------------------------------------------------
 src_path="${save_path}source/"
 card_path="${save_path}cards/"
@@ -18,7 +18,7 @@ proc_path="${save_path}processed/"
 #---------------------------------------------------------------------------------------------------
 #------------------------------------------cseg------------------------------------------------------
 python datagen_cseg.py $src_path $card_path $save_path
-python store_cseg.py $cseg_path
+#python store_cseg.py $cseg_path
 #---------------------------------------------------------------------------------------------------
 #------------------------------------------rec------------------------------------------------------
 #python datagen_rec.py $src_path $card_path $save_path --pure_scene_text True
