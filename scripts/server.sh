@@ -17,8 +17,8 @@ proc_path="${save_path}processed/"
 #python store_class.py $class_path
 #---------------------------------------------------------------------------------------------------
 #------------------------------------------cseg------------------------------------------------------
-python datagen_cseg.py $src_path $card_path $save_path
-#python store_cseg.py $cseg_path
+#python datagen_cseg.py $src_path $card_path $save_path
+python store_cseg.py $cseg_path
 #---------------------------------------------------------------------------------------------------
 #------------------------------------------rec------------------------------------------------------
 #python datagen_rec.py $src_path $card_path $save_path --pure_scene_text True
