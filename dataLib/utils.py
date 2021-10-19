@@ -154,7 +154,7 @@ def enhanceImage(img):
     return img
 
 #---------------------------------------------------------------
-def padDetectionImage(img,gray=False):
+def padDetectionImage(img,gray=False,pad_value=255):
     cfg={}
     if gray:
         h,w=img.shape
@@ -167,7 +167,7 @@ def padDetectionImage(img,gray=False):
         if gray:
             pad =np.zeros((h,pad_width))
         else:    
-            pad =np.ones((h,pad_width,d))*255
+            pad =np.ones((h,pad_width,d))*pad_value
         # pad
         img =np.concatenate([img,pad],axis=1)
         # cfg
@@ -181,7 +181,7 @@ def padDetectionImage(img,gray=False):
         if gray:
             pad=np.zeros((pad_height,w))
         else:
-            pad =np.ones((pad_height,w,d))*255
+            pad =np.ones((pad_height,w,d))*pad_value
         # pad
         img =np.concatenate([img,pad],axis=0)
         # cfg

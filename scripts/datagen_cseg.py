@@ -67,7 +67,7 @@ def main(args):
                 img_path =data_df.iloc[idx,0]
                 card_type=data_df.iloc[idx,1]
                 img,mask,base=render_data(backgen,img_path,src.config)
-                img,_   =padDetectionImage(img)
+                img,_   =padDetectionImage(img,pad_value=0)
                 mask,_  =padDetectionImage(mask,gray=True)
                 # coord
                 base=base.astype("float32")
