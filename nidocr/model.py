@@ -221,7 +221,7 @@ class OCR(object):
         if debug:
             plt.imshow(ref)
             plt.show()
-            plt.imshow(face)
+            plt.imshow(cv2.cvtColor(face,cv2.COLOR_BGR2RGB))
             plt.show()
             plt.imshow(sign)
             plt.show()

@@ -10,15 +10,15 @@ rec_path="${save_path}recog/"
 det_path="${save_path}detect/"
 proc_path="${save_path}processed/"
 #------------------------------------------card------------------------------------------------------
-#python datagen_card.py $src_path $save_path --num_data 10000
+#python datagen_card.py $src_path $save_path --num_data 100000 --use_smart_only True
 #----------------------------------------------------------------------------------------------------
 #------------------------------------------class------------------------------------------------------
 #python datagen_class.py $src_path $card_path $save_path 
 #python store_class.py $class_path
 #---------------------------------------------------------------------------------------------------
 #------------------------------------------cseg------------------------------------------------------
-python datagen_cseg.py $src_path $card_path $save_path
 python store_cseg.py $cseg_path
+#python datagen_cseg.py $src_path $card_path $save_path --use_smart_only True
 #---------------------------------------------------------------------------------------------------
 #------------------------------------------rec------------------------------------------------------
 #python datagen_rec.py $src_path $card_path $save_path --pure_scene_text True

@@ -22,6 +22,7 @@ import matplotlib.pyplot as plt
 def main(args):
     data_dir=args.data_dir
     save_dir=args.save_dir
+    use_smart_only=args.use_smart_only
     save_dir=create_dir(save_dir,"cards")
     img_dir =create_dir(save_dir,"images")
     mask_dir=create_dir(save_dir,"masks")
@@ -35,6 +36,8 @@ def main(args):
     for card_type in ["nid","smart"]:
         if card_type=="nid":
             aug=Modifier(use_brightness=False)
+            if use_smart_only:
+                continue
         else:
             aug=Modifier()
         for i in tqdm(range(n_data)):
@@ -60,6 +63,6 @@ if __name__=="__main__":
     parser.add_argument("data_dir", help="Path to source data")
     parser.add_argument("save_dir", help="Path to save the processed data")
     parser.add_argument("--num_data",required=False,default=100000,help ="number of data to create : default=100000")
-    
+    parser.add_argument("--use_smart_only",type=str2bool,required=False,default=False,help ="generate smart only")
     args = parser.parse_args()
     main(args)

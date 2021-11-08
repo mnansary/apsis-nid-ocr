@@ -29,7 +29,7 @@ def main(args):
     src_dir =args.src_dir
     save_dir=args.save_dir
     #use_colored=args.colored
-    
+    use_smart_only=args.use_smart_only
     save_dir=create_dir(save_dir,"segment")
     img_dir =create_dir(save_dir,"images")
     mask_dir=create_dir(save_dir,"masks")
@@ -61,6 +61,9 @@ def main(args):
     dicts=[]
 
     for card_type,data_df in zip(["nid","smart"],[nid_df,smart_df]):
+        if use_smart_only and card_type=="nid":
+            continue
+
         for idx in tqdm(range(len(data_df))):
             try:
                 data={}
@@ -104,6 +107,8 @@ if __name__=="__main__":
     parser.add_argument("card_dir", help="Path to cards data")
     parser.add_argument("save_dir", help="Path to save the processed data")
     parser.add_argument("--data_dim",required=False,default=256,help="dimension of data to save the images")
-    parser.add_argument("--num_data",required=False,default=20000,help ="number of data to create : default=20000")
+    parser.add_argument("--num_data",required=False,default=100000,help ="number of data to create : default=20000")
+    parser.add_argument("--use_smart_only",type=str2bool,required=False,default=False,help ="generate smart only")
+    
     args = parser.parse_args()
     main(args)

@@ -234,7 +234,7 @@ def render_data(backgen,img_path,config):
     img,mask,coord=augment_img_base(img_path,config)    
         
     # background
-    if random_exec():
+    if random_exec(weights=[0.95,0.05],match=0):
         # pad
         img,mask,coord=pad_image_mask(img,mask,coord,config)
         back=next(backgen)
