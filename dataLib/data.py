@@ -98,7 +98,7 @@ class Data(object):
 
         class config:
             max_rotation  = 45
-            max_warp_perc = 40 
+            max_warp_perc = 30 
             max_pad_perc  = 100
             use_scope_rotation=True
         class name:
