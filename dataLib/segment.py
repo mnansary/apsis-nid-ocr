@@ -81,7 +81,7 @@ def get_image_coords(curr_coord,M):
     return new_coord
 
     
-def get_warped_image(img,mask,src,config,warp_type):
+def get_warped_image(img,mask,src,config,warp_vec):
     '''
         returns warped image and new coords
         args:
@@ -89,32 +89,30 @@ def get_warped_image(img,mask,src,config,warp_type):
             mask     : mask for augmentation
             src      : list of current coords
             config   : warping config
-            warp_type: which type of warping to use 
+            warp_vec : which vector to warp  
     '''
     height,width,_=img.shape
-    # determine warp_type
-    for k,v in warp_type.items():
-        dim=v
-        warp_vec=k
+ 
     # construct dict warp
     x1,y1=src[0]
     x2,y2=src[1]
     x3,y3=src[2]
     x4,y4=src[3]
     # warping calculation
-    warp=random.randint(0,config.max_warp_perc)/100
+    xwarp=random.randint(0,config.max_warp_perc)/100
+    ywarp=random.randint(0,config.max_warp_perc)/100
     # construct destination
-    d1=int(dim*warp)
-    d2=dim-d1
+    dx=int(width*xwarp)
+    dy=int(height*ywarp)
     # const
-    if warp_vec=="p1-p2":
-        dst= [[d1,y1], [d2,y2],[x3,y3],[x4,y4]]
-    elif warp_vec=="p2-p3":
-        dst=[[x1,y1],[x2,d1],[x3,d2],[x4,y4]]
-    elif warp_vec=="p3-p4":
-        dst= [[x1,y1],[x2,y2],[d2,y3],[d1,y4]]
+    if warp_vec=="p1":
+        dst= [[dx,dy], [x2,y2],[x3,y3],[x4,y4]]
+    elif warp_vec=="p2":
+        dst=[[x1,y1],[x2-dx,dy],[x3,y3],[x4,y4]]
+    elif warp_vec=="p3":
+        dst= [[x1,y1],[x2,y2],[x3-dx,y3-dy],[x4,y4]]
     else:
-        dst= [[x1,d1],[x2,y2],[x3,y3],[x4,d2]]
+        dst= [[x1,y1],[x2,y2],[x3,y3],[dx,y4-dy]]
     M   = cv2.getPerspectiveTransform(np.float32(src),np.float32(dst))
     img = cv2.warpPerspective(img, M, (width,height))
     mask= cv2.warpPerspective(mask, M, (width,height),flags=cv2.INTER_NEAREST)
@@ -138,7 +136,7 @@ def augment_img_base(img_path,config):
 
     img=cv2.imread(img_path)
     height,width,d=img.shape
-    warp_types=[{"p1-p2":width},{"p2-p3":height},{"p3-p4":width},{"p4-p1":height}]
+    warp_types=["p1","p2","p3","p4"]
     
     mask_path=img_path.replace("images","masks")
     mask=cv2.imread(mask_path,0)
@@ -156,16 +154,13 @@ def augment_img_base(img_path,config):
                 [width-1,height-1], 
                 [0,height-1]]
     
-    if random_exec():
-        # warp
-        for i in range(2):
-            if i==0:
-                idxs=[0,2]
-            else:
-                if random_exec(weights=[0.5,0.5]):
-                    idxs=[1,3]
-                else:
-                    break
+    # warp
+    for i in range(2):
+        if i==0:
+            idxs=[0,2]
+        else:
+            idxs=[1,3]
+        if random_exec():    
             idx=random.choice(idxs)
             img,mask,curr_coord=get_warped_image(img,mask,curr_coord,config,warp_types[idx])
 
